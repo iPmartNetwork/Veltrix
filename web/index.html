@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071013" />
+    <meta name="description" content="Veltrix — Intelligent Network Control Dashboard" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Veltrix — Intelligent Network Control</title>
+    <link rel="icon" href="/assets/veltrix-icon.jpg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/assets/veltrix-icon.jpg" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div id="authScreen" class="auth-screen">
+      <section class="auth-card">
+        <img class="auth-mark" src="/assets/veltrix-icon.jpg" alt="" />
+        <p class="eyebrow">Veltrix Access</p>
+        <h1 id="authTitle">ورود به پنل</h1>
+        <p id="authHint">برای ادامه وارد حساب مدیریتی شوید.</p>
+
+        <form id="setupForm" class="auth-form hidden">
+          <label>
+            نام نمایشی ادمین اصلی
+            <input name="display_name" value="ادمین اصلی" autocomplete="name" />
+          </label>
+          <label>
+            نام کاربری
+            <input name="username" value="admin" autocomplete="username" required />
+          </label>
+          <label>
+            رمز عبور
+            <input name="password" type="password" autocomplete="new-password" required minlength="8" />
+          </label>
+          <button class="primary" type="submit">ساخت ادمین اصلی</button>
+        </form>
+
+        <form id="loginForm" class="auth-form hidden">
+          <label>
+            نام کاربری
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            رمز عبور
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary" type="submit">ورود</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="appShell" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-mark" src="/assets/veltrix-icon.jpg" alt="" />
+          <div>
+            <strong>Veltrix</strong>
+            <small>Intelligent Network Control</small>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="ناوبری اصلی">
+          <span class="nav-kicker">عملیات</span>
+          <a href="#overview" class="active">نمای کلی</a>
+          <a href="#servers" data-permission="servers">سرورها</a>
+          <a href="#server-detail" data-permission="servers">جزئیات سرور</a>
+          <a href="#outbounds" data-permission="outbounds">اوت‌باندها</a>
+          <a href="#history" data-permission="history">تحلیل</a>
+          <a href="#incidents" data-permission="incidents">رخدادها</a>
+          <a href="#alerts" data-permission="incidents">اعلان‌ها</a>
+          <span class="nav-kicker">مدیریت</span>
+          <a href="#license" data-permission="license">لایسنس</a>
+          <a href="#maintenance" data-permission="maintenance">بکاپ</a>
+          <a href="#account-security">امنیت حساب</a>
+          <a href="#users" data-permission="users">مدیرها</a>
+        </nav>
+
+        <div class="sidebar-foot">
+          <span id="currentUserLabel">-</span>
+          <span>پایش خودکار فعال است</span>
+          <strong id="lastUpdated">هنوز بروزرسانی نشده</strong>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <img class="topbar-mark" src="/assets/veltrix-mark.jpg" alt="" />
+          <div class="topbar-copy">
+            <p class="eyebrow">داشبورد عملیاتی</p>
+            <h1>Veltrix، کنترل هوشمند شبکه و مسیرهای V2Ray</h1>
+            <p class="topbar-subtitle">Intelligent Network Control</p>
+            <div class="topbar-pills">
+              <span>Self-hosted</span>
+              <span>x-ui Ready</span>
+              <span>License Protected</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="logoutBtn" class="ghost" type="button">خروج</button>
+            <button id="notifyBtn" class="ghost" type="button">اعلان مرورگر</button>
+            <button id="runMonitorBtn" class="secondary" type="button" data-permission="servers">پایش فوری</button>
+            <button id="refreshBtn" class="secondary" type="button">بروزرسانی</button>
+            <button id="addServerBtn" class="primary" type="button" data-permission="servers">سرور جدید</button>
+          </div>
+        </header>
+
+        <section id="overview" class="stats-grid" aria-label="آمار کلی">
+          <article class="stat-card stat-card-servers">
+            <span>سرورها</span>
+            <strong id="statServers">0</strong>
+            <small id="statOnline">0 آنلاین</small>
+          </article>
+          <article class="stat-card stat-card-routes">
+            <span>اوت‌باندها</span>
+            <strong id="statOutbounds">0</strong>
+            <small id="statBad">0 نیازمند بررسی</small>
+          </article>
+          <article class="stat-card stat-card-alerts">
+            <span>اعلان فعال</span>
+            <strong id="statAlerts">0</strong>
+            <small>CPU، RAM و پینگ</small>
+          </article>
+          <article class="stat-card stat-card-incidents">
+            <span>رخداد باز</span>
+            <strong id="statIncidents">0</strong>
+            <small id="statOpenIncidents">0 نیازمند اقدام</small>
+          </article>
+          <article class="stat-card stat-card-resources">
+            <span>میانگین منابع</span>
+            <strong id="statResources">-</strong>
+            <small>بر اساس آخرین داده x-ui</small>
+          </article>
+        </section>
+
+        <section id="license" class="panel brand-panel" data-permission="license">
+          <div class="brand-visual">
+            <img src="/assets/veltrix-lockup-light.jpg" alt="Veltrix Intelligent Network Control" />
+          </div>
+          <div class="license-copy">
+            <p class="eyebrow">Commercial License</p>
+            <h2>لایسنس فروش از طریق پشتیبانی</h2>
+            <p id="licenseRule">یک لایسنس فقط روی یک IP عمومی سرور فعال می‌شود.</p>
+            <div id="licenseStatus" class="license-status"></div>
+            <form id="licenseForm" class="license-form">
+              <input name="license_key" placeholder="VLX-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" />
+              <button class="primary" type="submit">فعال‌سازی</button>
+            </form>
+          </div>
+          <div id="licensePlans" class="plan-grid"></div>
+        </section>
+
+        <section id="history" class="panel history-panel" data-permission="history">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Telemetry</p>
+              <h2>تحلیل و تاریخچه</h2>
+            </div>
+            <div class="history-controls">
+              <select id="serverHistorySelect" aria-label="انتخاب سرور"></select>
+              <select id="outboundHistorySelect" aria-label="انتخاب اوت‌باند"></select>
+            </div>
+          </div>
+          <div class="chart-grid">
+            <article class="chart-card">
+              <div class="chart-head">
+                <strong>CPU / RAM</strong>
+                <span id="resourceChartMeta">-</span>
+              </div>
+              <div id="resourceChart" class="chart-box"></div>
+              <div class="chart-legend">
+                <span><i class="legend-cpu"></i>CPU</span>
+                <span><i class="legend-ram"></i>RAM</span>
+              </div>
+            </article>
+            <article class="chart-card">
+              <div class="chart-head">
+                <strong>Ping</strong>
+                <span id="pingChartMeta">-</span>
+              </div>
+              <div id="pingChart" class="chart-box"></div>
+              <div class="chart-legend">
+                <span><i class="legend-ping"></i>Latency</span>
+                <span><i class="legend-warn"></i>Warnings</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="servers" class="panel" data-permission="servers">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Server Fleet</p>
+              <h2>سرورها</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>نام</th>
+                  <th>IP / دامنه</th>
+                  <th>وضعیت</th>
+                  <th>CPU</th>
+                  <th>RAM</th>
+                  <th>x-ui</th>
+                  <th>اوت‌باند</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="serverRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="server-detail" class="panel server-detail-panel" data-permission="servers">
+          <div class="panel-head server-detail-head">
+            <div>
+              <p class="eyebrow">Server Operations</p>
+              <h2 id="serverDetailTitle">جزئیات سرور</h2>
+              <span id="serverDetailSubtitle" class="subtle">یک سرور را از جدول انتخاب کنید.</span>
+            </div>
+            <div class="detail-actions">
+              <button id="detailSyncBtn" class="secondary" type="button">همگام‌سازی x-ui</button>
+              <button id="detailPingBtn" class="secondary" type="button" data-permission="outbounds">تست پینگ اوتباندها</button>
+              <button id="detailEditBtn" class="ghost" type="button">ویرایش سرور</button>
+              <button id="detailGoIncidentsBtn" class="ghost" type="button" data-permission="incidents">رخدادهای مرتبط</button>
+            </div>
+          </div>
+          <div id="serverDetailBody" class="server-detail-body"></div>
+        </section>
+
+        <section id="outbounds" class="panel" data-permission="outbounds">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">V2Ray Routes</p>
+              <h2>اوت‌باندهای x-ui</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>نام</th>
+                  <th>سرور</th>
+                  <th>پروتکل</th>
+                  <th>آدرس</th>
+                  <th>پورت</th>
+                  <th>پینگ</th>
+                  <th>ترافیک</th>
+                  <th>آخرین بررسی</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="outboundRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="alerts" class="panel alerts-panel" data-permission="incidents">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Alerts</p>
+              <h2>اعلان‌های فعال</h2>
+            </div>
+          </div>
+          <div id="alertList" class="alert-list"></div>
+        </section>
+
+        <section id="notification-settings" class="panel notification-panel" data-permission="notifications">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Notifications</p>
+              <h2>کانال‌های اعلان</h2>
+            </div>
+          </div>
+          <form id="notificationForm" class="notification-form">
+            <label>
+              نام
+              <input name="name" placeholder="Operations Telegram" />
+            </label>
+            <label>
+              نوع
+              <select name="type">
+                <option value="telegram">Telegram</option>
+                <option value="webhook">Webhook</option>
+              </select>
+            </label>
+            <label class="notification-telegram">
+              Bot Token
+              <input name="bot_token" placeholder="123456:ABC..." autocomplete="off" />
+            </label>
+            <label class="notification-telegram">
+              Chat ID
+              <input name="chat_id" placeholder="-1001234567890" />
+            </label>
+            <label class="notification-webhook hidden">
+              Webhook URL
+              <input name="url" placeholder="https://example.com/veltrix" />
+            </label>
+            <label class="notification-webhook hidden">
+              Secret
+              <input name="secret" placeholder="اختیاری" autocomplete="off" />
+            </label>
+            <label class="check-line">
+              <input name="enabled" type="checkbox" checked />
+              فعال
+            </label>
+            <button class="primary" type="submit">ذخیره کانال</button>
+          </form>
+          <div id="notificationList" class="notification-list"></div>
+        </section>
+
+        <section id="incidents" class="panel incidents-panel" data-permission="incidents">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Incidents</p>
+              <h2>مدیریت رخدادها</h2>
+            </div>
+            <button id="refreshIncidentsBtn" class="secondary" type="button">بروزرسانی رخدادها</button>
+          </div>
+          <div id="incidentList" class="incident-list"></div>
+        </section>
+
+        <section id="maintenance" class="panel backup-panel" data-permission="maintenance">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Maintenance</p>
+              <h2>بکاپ و ریستور</h2>
+            </div>
+            <button id="createBackupBtn" class="primary" type="button">ساخت بکاپ</button>
+          </div>
+          <div class="backup-note">
+            <strong>ریستور دیتابیس فعلی را با نسخه انتخابی جایگزین می‌کند.</strong>
+            قبل از هر ریستور، Veltrix به صورت خودکار یک بکاپ ایمنی از وضعیت فعلی می‌سازد.
+          </div>
+          <div id="backupList" class="backup-list"></div>
+        </section>
+
+        <section id="account-security" class="panel account-security-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Account Security</p>
+              <h2>امنیت حساب</h2>
+            </div>
+          </div>
+          <div class="account-security-body">
+            <article class="security-summary">
+              <strong id="securityUserLabel">-</strong>
+              <span id="securityUserMeta">آخرین ورود: -</span>
+            </article>
+            <form id="passwordForm" class="password-form">
+              <label>
+                رمز فعلی
+                <input name="current_password" type="password" autocomplete="current-password" required />
+              </label>
+              <label>
+                رمز جدید
+                <input name="new_password" type="password" autocomplete="new-password" required minlength="8" />
+              </label>
+              <label>
+                تکرار رمز جدید
+                <input name="confirm_password" type="password" autocomplete="new-password" required minlength="8" />
+              </label>
+              <button class="primary" type="submit">تغییر رمز</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="users" class="panel access-panel" data-permission="users">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Access Control</p>
+              <h2>مدیرها و دسترسی‌ها</h2>
+            </div>
+            <button id="cancelUserEditBtn" class="ghost hidden" type="button">انصراف از ویرایش</button>
+          </div>
+          <form id="userForm" class="user-form">
+            <input type="hidden" name="id" />
+            <label>
+              نام نمایشی
+              <input name="display_name" placeholder="مدیر فروش" required />
+            </label>
+            <label>
+              نام کاربری
+              <input name="username" placeholder="manager01" required />
+            </label>
+            <label>
+              رمز عبور
+              <input name="password" type="password" autocomplete="new-password" minlength="8" />
+            </label>
+            <label class="check-line">
+              <input name="active" type="checkbox" checked />
+              فعال
+            </label>
+            <fieldset class="permission-grid" id="managerPermissionGrid">
+              <legend>دسترسی مدیر</legend>
+            </fieldset>
+            <button class="primary" type="submit">ذخیره مدیر</button>
+          </form>
+          <div id="userList" class="user-list"></div>
+
+          <div class="audit-block">
+            <div class="panel-head compact">
+              <div>
+                <p class="eyebrow">Security Log</p>
+                <h3>لاگ دسترسی و تغییرات</h3>
+              </div>
+            </div>
+            <div id="auditList" class="audit-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="serverDialog">
+      <form id="serverForm" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Server</p>
+            <h2 id="dialogTitle">سرور جدید</h2>
+          </div>
+          <button id="closeDialogBtn" class="icon-btn" type="button" aria-label="بستن">×</button>
+        </div>
+
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <label>
+            نام سرور
+            <input name="name" required placeholder="مثلاً Germany 01" />
+          </label>
+          <label>
+            IP یا دامنه عمومی
+            <input name="host" required placeholder="1.2.3.4 یا example.com" />
+          </label>
+          <label>
+            آدرس پنل x-ui
+            <input name="panel_url" placeholder="http://1.2.3.4:54321/basepath" />
+          </label>
+
+          <label>
+            روش احراز هویت پنل
+            <select name="auth_mode" id="serverAuthMode">
+              <option value="credentials">نام کاربری و رمز عبور</option>
+              <option value="api_token">API Token</option>
+            </select>
+          </label>
+
+          <div id="authCredentialsFields">
+            <label>
+              نام کاربری x-ui
+              <input name="username" autocomplete="username" />
+            </label>
+            <label>
+              رمز عبور x-ui
+              <input name="password" type="password" autocomplete="current-password" />
+            </label>
+          </div>
+
+          <div id="authTokenFields" class="hidden">
+            <label>
+              API Token پنل x-ui
+              <input name="api_token" placeholder="توکن دسترسی API پنل" autocomplete="off" />
+            </label>
+            <p class="auth-token-hint">
+              توکن API را از تنظیمات پنل x-ui دریافت کنید. این روش امن‌تر از نام کاربری/رمز عبور است.
+            </p>
+          </div>
+
+          <label>
+            هشدار پینگ
+            <input name="ping_warn_ms" type="number" min="10" value="350" />
+          </label>
+          <label>
+            هشدار CPU درصد
+            <input name="cpu_warn" type="number" min="1" max="100" value="85" />
+          </label>
+          <label>
+            هشدار RAM درصد
+            <input name="ram_warn" type="number" min="1" max="100" value="85" />
+          </label>
+          <label>
+            تایم‌اوت میلی‌ثانیه
+            <input name="timeout_ms" type="number" min="100" value="2500" />
+          </label>
+          <label class="check-line">
+            <input name="verify_tls" type="checkbox" checked />
+            بررسی TLS
+          </label>
+          <label class="check-line">
+            <input name="enabled" type="checkbox" checked />
+            فعال
+          </label>
+        </div>
+
+        <div class="dialog-actions">
+          <button id="deleteServerBtn" class="danger ghost" type="button">حذف</button>
+          <span></span>
+          <button class="secondary" value="cancel" type="button" id="cancelDialogBtn">انصراف</button>
+          <button class="primary" type="submit">ذخیره</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Theme toggle button (injected into topbar by JS) -->
+    <template id="themeToggleTemplate">
+      <button id="themeToggleBtn" class="ghost" type="button" title="تغییر تم">🌙</button>
+    </template>
+
+    <script src="/assets/app.js"></script>
+    <script src="/assets/enhancements.js"></script>
+    <script>
+    // --- Dark Mode ---
+    (function() {
+      const THEME_KEY = 'veltrix_theme';
+      function getTheme() {
+        return localStorage.getItem(THEME_KEY) || 'auto';
+      }
+      function applyTheme(theme) {
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      }
+      function toggleTheme() {
+        const current = getTheme();
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+        updateToggleIcon(next);
+        // Save to server
+        fetch('/api/settings', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({theme: next}),
+          credentials: 'same-origin'
+        }).catch(() => {});
+      }
+      function updateToggleIcon(theme) {
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+      // Apply on load
+      applyTheme(getTheme());
+      // Inject toggle button
+      document.addEventListener('DOMContentLoaded', function() {
+        const actions = document.querySelector('.topbar .actions');
+        if (actions) {
+          const btn = document.createElement('button');
+          btn.id = 'themeToggleBtn';
+          btn.className = 'ghost';
+          btn.type = 'button';
+          btn.title = 'تغییر تم';
+          btn.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+          btn.addEventListener('click', toggleTheme);
+          actions.prepend(btn);
+        }
+      });
+    })();
+
+    // --- Search & Pagination for tables ---
+    (function() {
+      let serverSearch = '';
+      let outboundSearch = '';
+      let serverPage = 1;
+      let outboundPage = 1;
+      const PAGE_SIZE = 20;
+
+      function injectSearchBar(tableSection, placeholder, onInput) {
+        const panelHead = tableSection.querySelector('.panel-head');
+        if (!panelHead || panelHead.querySelector('.search-input')) return;
+        const input = document.createElement('input');
+        input.className = 'search-input';
+        input.type = 'search';
+        input.placeholder = placeholder;
+        input.style.cssText = 'max-width:260px;min-height:36px;';
+        input.addEventListener('input', (e) => onInput(e.target.value));
+        panelHead.appendChild(input);
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const serversSection = document.getElementById('servers');
+        const outboundsSection = document.getElementById('outbounds');
+        if (serversSection) {
+          injectSearchBar(serversSection, 'جستجوی سرور...', (val) => {
+            serverSearch = val.toLowerCase();
+            if (typeof renderServers === 'function') renderServers();
+          });
+        }
+        if (outboundsSection) {
+          injectSearchBar(outboundsSection, 'جستجوی اوت‌باند...', (val) => {
+            outboundSearch = val.toLowerCase();
+            if (typeof renderOutbounds === 'function') renderOutbounds();
+          });
+        }
+      });
+
+      // Expose search state globally for render functions
+      window.__veltrixSearch = {
+        getServerSearch: () => serverSearch,
+        getOutboundSearch: () => outboundSearch,
+        getServerPage: () => serverPage,
+        getOutboundPage: () => outboundPage,
+        setServerPage: (p) => { serverPage = p; },
+        setOutboundPage: (p) => { outboundPage = p; },
+        PAGE_SIZE,
+      };
+    })();
+    </script>
+  </body>
+</html>

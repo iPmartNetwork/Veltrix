@@ -1,0 +1,19 @@
+# Veltrix - Python Dependencies
+# Currently relies on the Python 3.12+ standard library.
+# Listed below are optional production dependencies for enhanced performance.
+
+# No required external dependencies — Veltrix runs on stdlib only.
+# Uncomment below for optional enhancements:
+
+# --- Optional: faster JSON serialization ---
+# orjson==3.10.12
+
+# --- Optional: production ASGI server (future migration) ---
+# uvicorn==0.34.0
+# httptools==0.6.4
+
+# --- Optional: cryptography for Ed25519 (faster than pure-Python) ---
+# cryptography==44.0.0
+
+# --- Optional: structured logging enhancement ---
+# python-json-logger==3.2.1

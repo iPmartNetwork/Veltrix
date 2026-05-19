@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  veltrix:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veltrix
+    restart: unless-stopped
+    ports:
+      - "${OUTPANEL_PORT:-8000}:8000"
+    volumes:
+      - veltrix-data:/app/data
+      - veltrix-backups:/app/backups
+      - veltrix-logs:/app/logs
+    environment:
+      - OUTPANEL_HOST=0.0.0.0
+      - OUTPANEL_PORT=8000
+      - OUTPANEL_DB=/app/data/veltrix.db
+      - OUTPANEL_BACKUP_DIR=/app/backups
+      - OUTPANEL_LOG_DIR=/app/logs
+      - OUTPANEL_LOG_FILE=veltrix.log
+      - OUTPANEL_LOG_FORMAT=json
+      - OUTPANEL_MONITOR_INTERVAL=${OUTPANEL_MONITOR_INTERVAL:-30}
+      - OUTPANEL_API_TOKEN=${OUTPANEL_API_TOKEN:-}
+      - OUTPANEL_REQUIRE_LICENSE=${OUTPANEL_REQUIRE_LICENSE:-0}
+      - OUTPANEL_LICENSE_KEY=${OUTPANEL_LICENSE_KEY:-}
+      - OUTPANEL_LICENSE_PLAN=${OUTPANEL_LICENSE_PLAN:-}
+      - OUTPANEL_LICENSE_DURATION=${OUTPANEL_LICENSE_DURATION:-}
+      - OUTPANEL_LICENSE_EXPIRES_AT=${OUTPANEL_LICENSE_EXPIRES_AT:-}
+      - OUTPANEL_LICENSE_BOUND_IP=${OUTPANEL_LICENSE_BOUND_IP:-}
+      - OUTPANEL_LICENSE_SERVER_URL=${OUTPANEL_LICENSE_SERVER_URL:-}
+      - OUTPANEL_SERVER_PUBLIC_IP=${OUTPANEL_SERVER_PUBLIC_IP:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+
+volumes:
+  veltrix-data:
+    driver: local
+  veltrix-backups:
+    driver: local
+  veltrix-logs:
+    driver: local
