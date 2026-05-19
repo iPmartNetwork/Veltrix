@@ -1,115 +1,113 @@
 <p align="center">
-  <img src="web/assets/veltrix-brand-board.jpg" alt="Veltrix - Intelligent Network Control" width="420"/>
+  <img src="web/assets/veltrix-brand-board.jpg" alt="Veltrix — کنترل هوشمند شبکه" width="480"/>
 </p>
 
 <h1 align="center">Veltrix</h1>
 
 <p align="center">
-  <strong>Intelligent Network Control</strong>
+  <strong>کنترل هوشمند شبکه</strong><br>
+  داشبورد حرفه‌ای مدیریت سرورهای x-ui، مانیتورینگ اوت‌باندهای V2Ray، مدیریت رخدادها و کنترل لایسنس تجاری
 </p>
 
 <p align="center">
-  داشبورد حرفه‌ای مدیریت سرورهای x-ui، پایش اوتباندهای V2Ray، اعلان رخدادها و کنترل لایسنس تجاری.
+  <img src="https://img.shields.io/badge/نسخه-0.2.0-00bfa6?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/python-3.12+-3776ab?style=flat-square" alt="Python"/>
+  <img src="https://img.shields.io/badge/لایسنس-تجاری-red?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/پلتفرم-Linux%20%7C%20Docker-333?style=flat-square" alt="Platform"/>
+</p>
+
+<p align="center">
+  <a href="README.md">🇬🇧 English Documentation</a> •
+  <a href="docs/INSTALL_GUIDE.md">راهنمای نصب</a> •
+  <a href="CHANGELOG.md">تاریخچه تغییرات</a> •
+  <a href="docs/ARCHITECTURE.md">معماری</a>
 </p>
 
 ---
 
 ## معرفی
 
-**Veltrix** یک وب اپلیکیشن self-hosted برای فروشندگان اوتباند، اپراتورهای شبکه و تیم‌هایی است که چندین سرور x-ui/V2Ray را مدیریت می‌کنند. Veltrix وضعیت منابع سرورها، سلامت مسیرها، پینگ اوتباندها، رخدادها، اعلان‌ها، بکاپ‌ها و دسترسی مدیرها را از یک داشبورد واحد کنترل می‌کند.
+**Veltrix** یک اپلیکیشن وب self-hosted برای فروشندگان اوت‌باند، اپراتورهای شبکه و تیم‌هایی است که چندین سرور x-ui/V2Ray را مدیریت می‌کنند. این محصول مانیتورینگ منابع سرور، بررسی سلامت اوت‌باندها، مدیریت رخدادها، اعلان‌ها، بکاپ، کنترل دسترسی و لایسنس تجاری را در یک داشبورد عملیاتی واحد ارائه می‌دهد.
 
-این پروژه برای استفاده تجاری و فروش لایسنس طراحی شده است. License Server خصوصی و زیرساخت صدور لایسنس داخل این repository قرار نمی‌گیرد.
+Veltrix به عنوان **نرم‌افزار تجاری** طراحی شده است. سرور لایسنس خصوصی و زیرساخت صدور لایسنس عمداً در این مخزن قرار نگرفته‌اند.
 
-## قابلیت‌های اصلی
+---
 
-- مدیریت چندین سرور x-ui
-- همگام‌سازی inbound های x-ui و نمایش آن‌ها به عنوان اوتباند / مسیر V2Ray
-- پایش CPU، RAM، Disk، Uptime و وضعیت Xray در صورت پشتیبانی پنل
-- تست TCP ping برای هر اوتباند
-- تشخیص وضعیت‌های `ok`، `high`، `timeout`، `error` و `disabled`
-- صفحه جزئیات سرور با Health Score، نمودار منابع، نمودار پینگ و خطاهای اخیر
-- مدیریت رخدادها با وضعیت‌های `open`، `acknowledged` و `recovered`
-- اعلان مرورگر، Telegram و Webhook
-- ادمین اصلی با دسترسی کامل
-- امکان ساخت حداکثر ۱۰ مدیر با سطح دسترسی قابل تنظیم
-- تغییر رمز حساب و محدودسازی تلاش ورود ناموفق
-- بکاپ، دانلود، حذف و ریستور دیتابیس
-- آماده برای نصب روی Linux با systemd
-- Dockerfile برای اجرای containerized
-- کلاینت لایسنس تجاری با اتصال به License Server خصوصی
+## قابلیت‌های کلیدی
 
-## مدل لایسنس تجاری
+### مدیریت سرور
+- مدیریت چندین پنل x-ui با احراز هویت نام‌کاربری/رمز یا API Token
+- همگام‌سازی خودکار inbound ها (به عنوان اوت‌باند/مسیر V2Ray)
+- مانیتورینگ CPU، RAM، دیسک، آپتایم و وضعیت Xray
+- امتیاز سلامت سرور (۰ تا ۱۰۰) با درجه‌بندی A تا F
 
-Veltrix نرم‌افزار تجاری و proprietary است. استفاده، نصب، تغییر، توزیع، فروش مجدد یا ارائه سرویس به اشخاص ثالث بدون دریافت لایسنس معتبر از iPmartNetwork مجاز نیست.
+### مانیتورینگ و اعلان
+- تست TCP ping برای هر اوت‌باند با آستانه قابل تنظیم
+- تشخیص وضعیت: `سالم`، `پینگ بالا`، `تایم‌اوت`، `خطا`، `غیرفعال`
+- غیرفعال‌سازی خودکار اوت‌باند بعد از خرابی مکرر
+- آپدیت لحظه‌ای با Server-Sent Events (SSE)
+- Worker پس‌زمینه با interval قابل تنظیم
 
-هر لایسنس فقط برای یک IP عمومی سروری صادر می‌شود که Veltrix روی آن نصب شده است.
+### مدیریت رخدادها
+- چرخه حیات رخداد: `باز` ← `تایید شده` ← `حل شده`
+- ایجاد خودکار رخداد از خرابی‌های مداوم
+- اعلان مرورگر، ربات تلگرام و Webhook
+- ارسال event به سیستم‌های خارجی (Zapier, n8n, Make)
 
-| پلن | محدودیت | مناسب برای |
-| --- | --- | --- |
-| Pro | تا ۲۰ سرور | فروشندگان کوچک و متوسط اوتباند |
-| Enterprise | تا ۶۰ سرور و ۶۰ اوتباند | تیم‌ها و فروشندگان پرترافیک |
+### گزارش‌دهی و خروجی
+- گزارش uptime و availability (دوره ۷/۳۰/۹۰ روزه)
+- گزارش عملکرد اوت‌باندها با آمار latency
+- خروجی CSV برای سرورها، اوت‌باندها و رخدادها
+- گزارش هفتگی خودکار به کانال‌های اعلان
 
-مدت لایسنس:
+### امنیت و کنترل دسترسی
+- حساب ادمین اصلی با دسترسی کامل
+- تا ۱۰ حساب مدیر با دسترسی بخش‌بندی شده
+- هش رمز عبور PBKDF2-SHA256 (۲۶۰,۰۰۰ تکرار)
+- رمزنگاری AES-256 برای credentials ذخیره‌شده
+- محدودیت نرخ API (۱۲۰ درخواست/دقیقه + محافظت burst)
+- محدودیت ورود ناموفق با قفل IP
+- کوکی نشست HttpOnly با انقضای ۷ روزه
+- لاگ حسابرسی برای تمام عملیات حساس
 
-- ۶ ماهه
-- یک ساله
-- مادام‌العمر
+### داشبورد
+- رابط فارسی RTL حرفه‌ای با حالت تاریک (Dark Mode)
+- آپدیت لحظه‌ای وضعیت بدون بارگذاری مجدد صفحه
+- نمودارهای تعاملی CPU/RAM و تاریخچه پینگ
+- صفحه‌بندی جداول، جستجو و فیلتر وضعیت
+- پشتیبانی PWA (قابل نصب روی موبایل)
+- برندینگ سفارشی (لوگو، رنگ، نام محصول)
+- پشتیبانی چندزبانه (فارسی + انگلیسی)
 
-## ساختار پروژه
+### لایسنس تجاری
+- فعال‌سازی لایسنس با سرور لایسنس ریموت
+- اتصال IP (یک لایسنس برای هر IP عمومی سرور)
+- محدودیت سرور بر اساس پلن (Pro: ۲۰، Enterprise: ۶۰)
+- اعتبارسنجی توکن امضاشده Ed25519
+- دوره مهلت آفلاین با توکن‌های کش‌شده
 
-```text
-Veltrix/
-  outpanel/          Backend, API, auth, licensing client, monitoring, backup
-  web/               Persian RTL dashboard and static assets
-  docs/              Product, architecture, roadmap and licensing notes
-  scripts/           Development and Linux installer scripts
-  systemd/           Production systemd service
-  apps/              Future app boundaries for API, web and worker
-  packages/          Future shared package boundary
-  Dockerfile         Container runtime definition
-  .env.example       Production environment template
-  README.md          Project documentation
-  CHANGELOG.md       Release notes
-```
+---
 
-## پیش‌نیازها
+## نیازمندی‌ها
 
 - Python 3.12 یا جدیدتر
-- Linux برای نصب production با systemd
-- Docker برای اجرای containerized، اختیاری
-- دسترسی به پنل x-ui برای هر سرور
+- Linux برای نصب production (systemd)
+- Docker (اختیاری، برای اجرای کانتینری)
+- دسترسی پنل x-ui برای هر سرور مدیریت‌شده
 
-Veltrix در نسخه فعلی عمدتا از کتابخانه استاندارد Python استفاده می‌کند.
+Veltrix کاملاً روی کتابخانه استاندارد Python اجرا می‌شود — نیازی به پکیج خارجی نیست.
 
-## اجرای محلی
+---
 
-از ریشه پروژه:
+## شروع سریع
 
-```bash
-python -m outpanel.app --host 127.0.0.1 --port 8000
-```
-
-داشبورد:
-
-```text
-http://127.0.0.1:8000
-```
-
-در اولین اجرا، صفحه ساخت ادمین اصلی نمایش داده می‌شود.
-
-## اجرای Docker
+### نصب یک‌خطی (Linux)
 
 ```bash
-docker build -t veltrix:latest .
-
-docker run --rm -p 8000:8000 \
-  -v veltrix-data:/app/data \
-  -v veltrix-backups:/app/backups \
-  --env OUTPANEL_REQUIRE_LICENSE=0 \
-  veltrix:latest
+bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/main/scripts/install-linux.sh)
 ```
 
-## نصب روی Linux
+### نصب روی سرور Linux (دستی)
 
 ```bash
 git clone https://github.com/iPmartNetwork/Veltrix.git
@@ -117,95 +115,127 @@ cd Veltrix
 sudo bash scripts/install-linux.sh
 ```
 
-نصب‌کننده:
+اسکریپت نصب شامل:
+- منوی تعاملی با ۵ گزینه (نصب، آپدیت، دمو، وضعیت، حذف)
+- نصب خودکار Python 3.12 در صورت عدم وجود
+- تشخیص سیستم‌عامل (Ubuntu, Debian, CentOS, Fedora, AlmaLinux, Arch)
+- تولید خودکار کلید رمزنگاری و توکن API
+- سرویس systemd با تنظیمات امنیتی
+- حالت غیرتعاملی: `--install`, `--update`, `--demo`, `--uninstall`
 
-- پروژه را داخل `/opt/veltrix` کپی می‌کند.
-- کاربر سیستمی `veltrix` می‌سازد.
-- فایل env را در `/etc/veltrix.env` ایجاد می‌کند.
-- سرویس `veltrix.service` را فعال و اجرا می‌کند.
-
-بررسی وضعیت سرویس:
+### توسعه محلی
 
 ```bash
-systemctl status veltrix.service
+python -m outpanel.app --host 127.0.0.1 --port 8000
 ```
 
-## متغیرهای محیطی مهم
+آدرس `http://127.0.0.1:8000` را باز کنید و حساب ادمین بسازید.
 
-| Variable | توضیح |
-| --- | --- |
-| `OUTPANEL_HOST` | آدرس bind وب سرور |
-| `OUTPANEL_PORT` | پورت وب سرور |
-| `OUTPANEL_DB` | مسیر دیتابیس SQLite |
-| `OUTPANEL_BACKUP_DIR` | مسیر ذخیره بکاپ‌ها |
-| `OUTPANEL_MONITOR_INTERVAL` | فاصله اجرای مانیتورینگ بر حسب ثانیه |
-| `OUTPANEL_API_TOKEN` | توکن API برای اتوماسیون امن |
-| `OUTPANEL_REQUIRE_LICENSE` | فعال‌سازی الزام لایسنس |
-| `OUTPANEL_LICENSE_SERVER_URL` | آدرس License Server خصوصی |
-| `OUTPANEL_SERVER_PUBLIC_IP` | IP عمومی سرور برای binding لایسنس |
+### Docker
 
-## اتصال به x-ui
+```bash
+docker compose up -d
+```
 
-برای هر سرور این موارد وارد می‌شود:
+---
 
+## پیکربندی
+
+تمام تنظیمات از طریق متغیرهای محیطی انجام می‌شود. فایل [`.env.example`](.env.example) را مشاهده کنید.
+
+| متغیر | توضیح | پیش‌فرض |
+|--------|-------|---------|
+| `OUTPANEL_PORT` | پورت سرور HTTP | 8000 |
+| `OUTPANEL_DB` | مسیر دیتابیس SQLite | data/veltrix.db |
+| `OUTPANEL_MONITOR_INTERVAL` | فاصله مانیتورینگ (ثانیه) | 30 |
+| `OUTPANEL_API_TOKEN` | توکن احراز هویت API | — |
+| `OUTPANEL_ENCRYPTION_KEY` | کلید AES برای رمزنگاری credentials | — |
+| `OUTPANEL_LANGUAGE` | زبان رابط (fa/en) | fa |
+| `OUTPANEL_AUTO_DISABLE_THRESHOLD` | غیرفعال‌سازی خودکار بعد از N خرابی | 5 |
+| `OUTPANEL_REQUIRE_LICENSE` | اجبار اعتبارسنجی لایسنس | 0 |
+
+---
+
+## اتصال سرور x-ui
+
+هر سرور نیاز دارد به:
 - نام سرور
 - IP یا دامنه عمومی
 - آدرس پنل x-ui
-- نام کاربری و رمز عبور پنل
-- آستانه هشدار CPU، RAM و ping
-- timeout اتصال
+- روش احراز هویت:
+  - **نام کاربری و رمز عبور** — روش سنتی
+  - **API Token** — امن‌تر، بدون ذخیره رمز ادمین
+- آستانه‌های هشدار CPU، RAM و پینگ
+- تایم‌اوت اتصال
 
-Veltrix برای تست پینگ از TCP connect استفاده می‌کند، چون ICMP ping روی بسیاری از سرورها نیازمند permission سطح سیستم است.
+---
+
+## مدل لایسنس
+
+Veltrix نرم‌افزار تجاری اختصاصی است. استفاده، نصب، تغییر، توزیع، فروش مجدد، واگذاری، میزبانی عمومی یا در دسترس قرار دادن این نرم‌افزار برای اشخاص ثالث بدون لایسنس تجاری معتبر صادرشده توسط iPmartNetwork مجاز نیست.
+
+| پلن | محدودیت | مخاطب |
+|-----|---------|-------|
+| Pro | تا ۲۰ سرور | فروشندگان کوچک و متوسط اوت‌باند |
+| Enterprise | تا ۶۰ سرور و ۶۰ اوت‌باند | تیم‌ها و اپراتورهای پرترافیک |
+
+مدت لایسنس: ۶ ماهه، ۱ ساله، مادام‌العمر.
+
+---
 
 ## امنیت
 
-- رمز کاربران با PBKDF2-SHA256 ذخیره می‌شود.
-- session ها با cookie از نوع HttpOnly نگهداری می‌شوند.
-- بعد از تغییر رمز، session های دیگر همان کاربر حذف می‌شوند.
-- تلاش ورود ناموفق rate limit دارد.
-- رمز x-ui در خروجی API سرورها به داشبورد برگردانده نمی‌شود.
-- ادمین اصلی همیشه دسترسی کامل دارد.
-- مدیرها فقط به بخش‌هایی دسترسی دارند که ادمین اصلی تعیین کرده است.
+- رمزهای عبور با PBKDF2-SHA256 (۲۶۰,۰۰۰ تکرار) ذخیره می‌شوند
+- credentials پنل x-ui با AES-256-CBC + HMAC-SHA256 رمزنگاری می‌شوند
+- نشست‌ها در کوکی HttpOnly با محافظت SameSite
+- محدودیت ورود ناموفق (۵ تلاش → قفل ۱۵ دقیقه‌ای)
+- محدودیت نرخ API (۱۲۰ درخواست/دقیقه به ازای هر IP)
+- رمزهای x-ui هرگز در پاسخ API برگردانده نمی‌شوند
+- توکن‌های لایسنس امضاشده Ed25519 (غیرقابل جعل بدون کلید خصوصی)
 
-## مواردی که نباید در GitHub قرار بگیرند
+---
 
-- `data/*.db`
-- `data/*.db-*`
-- `data/license-cache.json`
-- `data/instance.id`
-- `logs/`
-- `backups/`
-- `.env`
-- License Server خصوصی
+## ساختار پروژه
 
-## تست‌های پایه توسعه
-
-```bash
-python -m compileall -q outpanel
-node --check web/assets/app.js
+```
+Veltrix/
+├── outpanel/              بک‌اند Python (۲۲ ماژول)
+├── web/                   فرانت‌اند داشبورد
+│   ├── index.html         اپلیکیشن تک‌صفحه‌ای
+│   ├── assets/            CSS, JS, تصاویر
+│   ├── manifest.json      مانیفست PWA
+│   └── sw.js              Service Worker
+├── docs/                  مستندات
+├── scripts/               اسکریپت‌های نصب
+├── systemd/               فایل سرویس
+├── Dockerfile             ساخت کانتینر
+├── docker-compose.yml     کامپوز production
+└── CHANGELOG.md           تاریخچه انتشار
 ```
 
-## وضعیت توسعه
+---
 
-Veltrix نسخه `0.1.0` شامل هسته اصلی محصول است. موارد پیشنهادی برای مراحل بعد:
+## توسعه
 
-- Docker Compose کامل
-- installer حرفه‌ای‌تر با مسیر upgrade
-- migration system برای دیتابیس
-- رمزنگاری credentials حساس در دیتابیس
-- گزارش‌گیری مدیریتی
-- اتصال نهایی به License Server خصوصی
+```bash
+# بررسی کامپایل
+python -m compileall -q outpanel
 
-## مجوز
+# اجرای محلی
+python -m outpanel.app --host 127.0.0.1 --port 8000
 
-Veltrix نرم‌افزار proprietary و تجاری است.
+# با داده دمو
+OUTPANEL_DEMO_MODE=1 python -m outpanel.app
+```
 
-استفاده، نصب، تغییر، توزیع، sublicense، فروش مجدد، hosting عمومی یا ارائه این نرم‌افزار به اشخاص ثالث بدون لایسنس معتبر صادرشده توسط iPmartNetwork مجاز نیست.
-
-برای جزئیات بیشتر، فایل `LICENSE.md` یا توافق‌نامه تجاری/EULA پروژه را مطالعه کنید.
+---
 
 ## پشتیبانی
 
-برای خرید لایسنس، پشتیبانی یا هماهنگی نصب، با تیم iPmartNetwork تماس بگیرید.
+برای خرید لایسنس، پشتیبانی نصب یا استعلام تجاری با تیم iPmartNetwork تماس بگیرید.
 
 ---
+
+<p align="center">
+  <sub>ساخته شده با دقت توسط iPmartNetwork</sub>
+</p>

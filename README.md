@@ -1,115 +1,156 @@
 <p align="center">
-  <img src="web/assets/veltrix-brand-board.jpg" alt="Veltrix - Intelligent Network Control" width="420"/>
+  <img src="web/assets/veltrix-brand-board.jpg" alt="Veltrix — Intelligent Network Control" width="480"/>
 </p>
 
 <h1 align="center">Veltrix</h1>
 
 <p align="center">
-  <strong>Intelligent Network Control</strong>
+  <strong>Intelligent Network Control</strong><br>
+  Professional dashboard for x-ui server management, V2Ray outbound monitoring, incident response, and commercial license control.
 </p>
 
 <p align="center">
-  A professional dashboard for x-ui server management, V2Ray outbound monitoring, incident alerts, and commercial license control.
+  <img src="https://img.shields.io/badge/version-0.2.0-00bfa6?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/python-3.12+-3776ab?style=flat-square" alt="Python"/>
+  <img src="https://img.shields.io/badge/license-Commercial-red?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/platform-Linux%20%7C%20Docker-333?style=flat-square" alt="Platform"/>
+</p>
+
+<p align="center">
+  <a href="README_FA.md">🇮🇷 مستندات فارسی</a> •
+  <a href="docs/INSTALL_GUIDE.md">Installation Guide</a> •
+  <a href="CHANGELOG.md">Changelog</a> •
+  <a href="docs/ARCHITECTURE.md">Architecture</a>
 </p>
 
 ---
 
 ## Overview
 
-**Veltrix** is a self-hosted web application for outbound sellers, network operators, and teams managing multiple x-ui/V2Ray servers. It brings server resource monitoring, outbound health checks, ping visibility, incidents, notifications, backups, access control, and commercial licensing into one operational dashboard.
+**Veltrix** is a self-hosted web application for outbound sellers, network operators, and teams managing multiple x-ui/V2Ray servers. It consolidates server resource monitoring, outbound health checks, ping visibility, incident management, notifications, backups, access control, and commercial licensing into a single operational dashboard.
 
-Veltrix is designed as commercial software. The private License Server and license issuing infrastructure are intentionally not included in this repository.
+Veltrix is designed as **commercial software**. The private License Server and license issuing infrastructure are intentionally not included in this repository.
+
+---
 
 ## Key Features
 
-- Multi-server x-ui management
-- x-ui inbound synchronization, presented as V2Ray outbounds/routes
-- CPU, RAM, disk, uptime, and Xray status monitoring where supported
-- TCP ping checks for each outbound
-- Status detection for `ok`, `high`, `timeout`, `error`, and `disabled`
-- Server detail view with Health Score, resource chart, focused ping chart, and recent risks
-- Incident lifecycle with `open`, `acknowledged`, and `recovered` states
-- Browser notifications, Telegram, and Webhook channels
+### Server Management
+- Multi-server x-ui panel management with credential or API token authentication
+- Automatic inbound synchronization (presented as V2Ray outbounds/routes)
+- CPU, RAM, disk, uptime, and Xray status monitoring
+- Server Health Score (0–100) with grade assignment (A–F)
+
+### Monitoring & Alerts
+- TCP ping checks for each outbound with configurable thresholds
+- Status detection: `ok`, `high`, `timeout`, `error`, `disabled`
+- Automatic outbound disable after repeated failures
+- Real-time updates via Server-Sent Events (SSE)
+- Background monitoring worker with configurable interval
+
+### Incident Management
+- Incident lifecycle: `open` → `acknowledged` → `recovered`
+- Automatic incident creation from persistent failures
+- Browser notifications, Telegram bot, and Webhook channels
+- Webhook events for external integrations (Zapier, n8n, Make)
+
+### Reporting & Export
+- Uptime and availability reports (7/30/90 day periods)
+- Outbound performance reports with latency statistics
+- CSV export for servers, outbounds, and incidents
+- Scheduled weekly reports sent to notification channels
+
+### Security & Access Control
 - Primary owner account with full access
-- Up to 10 manager accounts with configurable permissions
-- Account password change and failed-login rate limiting
-- Database backup, download, delete, and restore workflows
-- Linux systemd deployment support
-- Dockerfile for containerized runtime
-- Commercial license client integration with a private License Server
+- Up to 10 manager accounts with section-level permissions
+- PBKDF2-SHA256 password hashing (260,000 iterations)
+- AES-256 encryption for stored credentials
+- API rate limiting (120 req/min per IP + burst protection)
+- Login rate limiting with IP-based lockout
+- HttpOnly session cookies with 7-day expiry
+- Audit logging for all sensitive actions
 
-## Commercial Licensing Model
+### Dashboard
+- Professional Persian RTL interface with Dark Mode
+- Real-time status updates without page reload
+- Interactive charts for CPU/RAM and ping history
+- Table pagination, search, and status filters
+- PWA support (installable on mobile devices)
+- Custom branding (logo, colors, product name)
+- Multi-language support (Persian + English)
 
-Veltrix is proprietary commercial software. Use, installation, modification, distribution, resale, sublicensing, public hosting, or making this software available to third parties is not permitted without a valid commercial license issued by iPmartNetwork.
+### Commercial Licensing
+- License activation with remote License Server
+- IP binding (one license per server public IP)
+- Plan-based server limits (Pro: 20, Enterprise: 60)
+- Ed25519 signed token verification
+- Offline grace period with cached tokens
 
-Each license is bound to one authorized public server IP where Veltrix is installed.
+---
 
-| Plan | Limit | Recommended For |
-| --- | --- | --- |
-| Pro | Up to 20 servers | Small and medium outbound sellers |
-| Enterprise | Up to 60 servers and 60 outbounds | High-traffic teams and operators |
+## Architecture
 
-License durations:
-
-- 6 months
-- 1 year
-- Lifetime
-
-## Project Structure
-
-```text
-Veltrix/
-  outpanel/          Backend, API, auth, licensing client, monitoring, backup
-  web/               Persian RTL dashboard and static assets
-  docs/              Product, architecture, roadmap and licensing notes
-  scripts/           Development and Linux installer scripts
-  systemd/           Production systemd service
-  apps/              Future app boundaries for API, web and worker
-  packages/          Future shared package boundary
-  Dockerfile         Container runtime definition
-  .env.example       Production environment template
-  README.md          Project documentation
-  CHANGELOG.md       Release notes
 ```
+Veltrix/
+├── outpanel/              Python backend (22 modules)
+│   ├── app.py             HTTP server with router-based dispatch
+│   ├── router.py          URL routing with path params & permissions
+│   ├── routes.py          60+ API endpoint handlers
+│   ├── auth.py            Authentication, RBAC, sessions, audit
+│   ├── monitor.py         Server sync, ping, health score
+│   ├── worker.py          Enhanced background worker
+│   ├── sse.py             Server-Sent Events broker
+│   ├── webhooks.py        Webhook event dispatcher
+│   ├── reports.py         Operational reporting & CSV export
+│   ├── crypto.py          AES-256 credential encryption
+│   ├── ratelimit.py       Sliding-window rate limiter
+│   ├── logger.py          Structured JSON request logging
+│   ├── migrations.py      Database migration system
+│   ├── i18n.py            Internationalization (fa/en)
+│   ├── branding.py        Custom branding support
+│   ├── licensing.py       License client & activation
+│   ├── token_verify.py    Ed25519 signature verification
+│   ├── notifier.py        Telegram & Webhook notifications
+│   ├── backup.py          Database backup & restore
+│   ├── demo.py            Demo data generator
+│   ├── xui.py             x-ui panel API client
+│   ├── ping.py            TCP ping implementation
+│   └── db.py              SQLite connection & schema
+├── web/                   Frontend dashboard
+│   ├── index.html         Single-page application
+│   ├── assets/            CSS, JS, images
+│   ├── manifest.json      PWA manifest
+│   └── sw.js              Service Worker
+├── docs/                  Documentation
+├── scripts/               Installation scripts
+├── systemd/               Service unit file
+├── Dockerfile             Container build
+├── docker-compose.yml     Production compose
+└── CHANGELOG.md           Release history
+```
+
+---
 
 ## Requirements
 
 - Python 3.12 or newer
-- Linux for production systemd installation
-- Docker for containerized execution, optional
+- Linux for production (systemd deployment)
+- Docker (optional, for containerized runtime)
 - x-ui panel access for each managed server
 
-Veltrix currently relies mostly on the Python standard library.
+Veltrix runs entirely on the Python standard library — no external packages required.
 
-## Local Development
+---
 
-From the project root:
+## Quick Start
 
-```bash
-python -m outpanel.app --host 127.0.0.1 --port 8000
-```
-
-Dashboard:
-
-```text
-http://127.0.0.1:8000
-```
-
-On first run, Veltrix shows the primary owner setup screen.
-
-## Docker Runtime
+### One-Line Install (Linux)
 
 ```bash
-docker build -t veltrix:latest .
-
-docker run --rm -p 8000:8000 \
-  -v veltrix-data:/app/data \
-  -v veltrix-backups:/app/backups \
-  --env OUTPANEL_REQUIRE_LICENSE=0 \
-  veltrix:latest
+bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/main/scripts/install-linux.sh)
 ```
 
-## Linux Installation
+### Linux Production (Manual)
 
 ```bash
 git clone https://github.com/iPmartNetwork/Veltrix.git
@@ -117,96 +158,111 @@ cd Veltrix
 sudo bash scripts/install-linux.sh
 ```
 
-The installer:
+The installer provides:
+- Interactive menu with 5 options (install, update, demo, status, uninstall)
+- Automatic Python 3.12 installation if not present
+- OS detection (Ubuntu, Debian, CentOS, Fedora, AlmaLinux, Arch)
+- Auto-generated encryption key and API token
+- systemd service with security hardening
+- Non-interactive mode: `--install`, `--update`, `--demo`, `--uninstall`
 
-- Copies the project to `/opt/veltrix`
-- Creates the `veltrix` system user
-- Creates `/etc/veltrix.env`
-- Enables and starts `veltrix.service`
-
-Check service status:
+### Local Development
 
 ```bash
-systemctl status veltrix.service
+python -m outpanel.app --host 127.0.0.1 --port 8000
 ```
 
-## Important Environment Variables
+Open `http://127.0.0.1:8000` and create the admin account.
 
-| Variable | Description |
-| --- | --- |
-| `OUTPANEL_HOST` | Web server bind address |
-| `OUTPANEL_PORT` | Web server port |
-| `OUTPANEL_DB` | SQLite database path |
-| `OUTPANEL_BACKUP_DIR` | Backup storage path |
-| `OUTPANEL_MONITOR_INTERVAL` | Monitoring interval in seconds |
-| `OUTPANEL_API_TOKEN` | API token for secure automation |
-| `OUTPANEL_REQUIRE_LICENSE` | Enforce commercial licensing |
-| `OUTPANEL_LICENSE_SERVER_URL` | Private License Server URL |
-| `OUTPANEL_SERVER_PUBLIC_IP` | Public server IP for license binding |
+### Docker
 
-## x-ui Connection
+```bash
+docker compose up -d
+```
 
-Each server requires:
+---
 
-- Server name
-- Public IP or domain
-- x-ui panel URL
-- x-ui username and password
-- CPU, RAM, and ping warning thresholds
-- Connection timeout
+## Configuration
 
-Veltrix uses TCP connect checks for ping monitoring because ICMP ping often requires elevated system permissions.
+All configuration is via environment variables. See [`.env.example`](.env.example) for the complete reference.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OUTPANEL_PORT` | HTTP server port | 8000 |
+| `OUTPANEL_DB` | SQLite database path | data/veltrix.db |
+| `OUTPANEL_MONITOR_INTERVAL` | Monitoring interval (seconds) | 30 |
+| `OUTPANEL_API_TOKEN` | API authentication token | — |
+| `OUTPANEL_ENCRYPTION_KEY` | AES key for credential encryption | — |
+| `OUTPANEL_LANGUAGE` | Interface language (fa/en) | fa |
+| `OUTPANEL_AUTO_DISABLE_THRESHOLD` | Auto-disable after N failures | 5 |
+| `OUTPANEL_REQUIRE_LICENSE` | Enforce license validation | 0 |
+
+---
+
+## API
+
+Veltrix exposes a RESTful JSON API with 60+ endpoints:
+
+| Category | Endpoints |
+|----------|-----------|
+| Auth | `/api/auth/status`, `/api/auth/login`, `/api/auth/setup`, `/api/auth/logout`, `/api/auth/password` |
+| Servers | `/api/servers`, `/api/servers/{id}`, `/api/servers/{id}/sync`, `/api/servers/{id}/health` |
+| Outbounds | `/api/outbounds`, `/api/outbounds/{id}/ping`, `/api/outbounds/{id}/checks` |
+| Alerts | `/api/alerts`, `/api/alerts/{id}/dismiss` |
+| Incidents | `/api/incidents`, `/api/incidents/{id}/ack`, `/api/incidents/{id}/recover` |
+| Notifications | `/api/notification-channels`, `/api/notification-channels/{id}/test` |
+| Reports | `/api/reports/uptime`, `/api/reports/outbounds`, `/api/export/*` |
+| Real-time | `/api/events` (SSE stream) |
+| Settings | `/api/settings`, `/api/branding`, `/api/i18n` |
+
+---
+
+## Licensing Model
+
+Veltrix is proprietary commercial software. Use, installation, modification, distribution, resale, sublicensing, public hosting, or making this software available to third parties is not permitted without a valid commercial license issued by iPmartNetwork.
+
+| Plan | Limit | Audience |
+|------|-------|----------|
+| Pro | Up to 20 servers | Small and medium outbound sellers |
+| Enterprise | Up to 60 servers, 60 outbounds | High-traffic teams and operators |
+
+License durations: 6 months, 1 year, Lifetime.
+
+---
 
 ## Security
 
-- User passwords are stored with PBKDF2-SHA256.
-- Sessions are stored in HttpOnly cookies.
-- Changing a password removes other sessions for the same user.
-- Failed login attempts are rate-limited.
-- x-ui passwords are not returned in server API responses.
-- The primary owner always has full access.
-- Managers only receive the permissions assigned by the owner.
+- Passwords stored with PBKDF2-SHA256 (260,000 iterations)
+- x-ui credentials encrypted with AES-256-CBC + HMAC-SHA256
+- Sessions in HttpOnly cookies with SameSite protection
+- Failed login rate limiting (5 attempts → 15-minute lockout)
+- API rate limiting (120 requests/minute per IP)
+- x-ui passwords never returned in API responses
+- Ed25519 signed license tokens (unforgeable without private key)
 
-## Do Not Commit
+---
 
-The following files and directories are runtime/private data and must not be committed:
-
-- `data/*.db`
-- `data/*.db-*`
-- `data/license-cache.json`
-- `data/instance.id`
-- `logs/`
-- `backups/`
-- `.env`
-- Private License Server files
-
-## Development Checks
+## Development
 
 ```bash
+# Compile check
 python -m compileall -q outpanel
-node --check web/assets/app.js
+
+# Run locally
+python -m outpanel.app --host 127.0.0.1 --port 8000
+
+# With demo data
+OUTPANEL_DEMO_MODE=1 python -m outpanel.app
 ```
 
-## Development Status
-
-Veltrix `0.1.0` includes the core product baseline. Recommended next steps:
-
-- Complete Docker Compose setup
-- Improve the production installer and upgrade path
-- Add database migrations
-- Encrypt sensitive credentials at rest
-- Add operational reporting
-- Finalize private License Server integration
-
-## License
-
-Veltrix is proprietary commercial software.
-
-Use, installation, modification, distribution, sublicensing, resale, public hosting, or making this software available to third parties is not permitted without a valid commercial license issued by iPmartNetwork.
-
-See `LICENSE.md` or the commercial EULA for details.
+---
 
 ## Support
 
 For licensing, installation support, or commercial inquiries, contact the iPmartNetwork team.
 
+---
+
+<p align="center">
+  <sub>Built with precision by iPmartNetwork</sub>
+</p>
