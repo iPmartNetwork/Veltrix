@@ -81,6 +81,13 @@ def enhanced_monitor_loop(stop_event: threading.Event, interval: int) -> None:
             except Exception:
                 pass
 
+        # Check for scheduled backup
+        try:
+            from .scheduled_backup import run_scheduled_backup
+            run_scheduled_backup()
+        except Exception:
+            pass
+
         stop_event.wait(interval)
 
 

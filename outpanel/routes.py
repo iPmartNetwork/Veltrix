@@ -162,6 +162,15 @@ def build_router() -> Router:
     # --- Demo ---
     router.post("/api/demo/seed", handle_demo_seed, permission="maintenance")
 
+    # --- 2FA ---
+    router.get("/api/auth/2fa/status", handle_2fa_status)
+    router.post("/api/auth/2fa/enable", handle_2fa_enable)
+    router.post("/api/auth/2fa/confirm", handle_2fa_confirm)
+    router.post("/api/auth/2fa/disable", handle_2fa_disable)
+
+    # --- Backup Schedule ---
+    router.get("/api/backups/schedule", handle_backup_schedule, permission="maintenance")
+
     # --- Bulk Operations ---
     router.post("/api/bulk/ping", handle_bulk_ping, permission="servers")
     router.post("/api/bulk/sync", handle_bulk_sync, permission="servers")
@@ -1089,3 +1098,67 @@ def handle_license_validate(ctx: RequestContext) -> dict[str, Any]:
 def handle_license_display(ctx: RequestContext) -> dict[str, Any]:
     from .license_validator import get_license_display_info
     return {"license": get_license_display_info()}
+
+
+# ---------------------------------------------------------------------------
+# 2FA handlers
+# ---------------------------------------------------------------------------
+
+def handle_2fa_status(ctx: RequestContext) -> dict[str, Any]:
+    from .totp import get_2fa_status
+    user_id = ctx.user.get("id") if ctx.user else None
+    if not user_id:
+        raise PermissionError("Login required.")
+    return get_2fa_status(user_id)
+
+
+def handle_2fa_enable(ctx: RequestContext) -> dict[str, Any]:
+    from .totp import enable_2fa
+    user_id = ctx.user.get("id") if ctx.user else None
+    if not user_id:
+        raise PermissionError("Login required.")
+    result = enable_2fa(user_id)
+    return {"ok": True, **result}
+
+
+def handle_2fa_confirm(ctx: RequestContext) -> dict[str, Any]:
+    from .totp import confirm_2fa
+    user_id = ctx.user.get("id") if ctx.user else None
+    if not user_id:
+        raise PermissionError("Login required.")
+    code = str(ctx.body.get("code") or "").strip()
+    if not code:
+        raise ValueError("TOTP code is required.")
+    success = confirm_2fa(user_id, code)
+    if not success:
+        raise ValueError("Invalid code. Please try again.")
+    _audit(ctx, "auth.2fa_enabled", "user", user_id, {})
+    return {"ok": True, "message": "2FA activated successfully."}
+
+
+def handle_2fa_disable(ctx: RequestContext) -> dict[str, Any]:
+    from .totp import disable_2fa
+    user_id = ctx.user.get("id") if ctx.user else None
+    if not user_id:
+        raise PermissionError("Login required.")
+    # Require current password for security
+    password = str(ctx.body.get("password") or "")
+    if not password:
+        raise ValueError("Current password is required to disable 2FA.")
+    from .auth import verify_password
+    with connect() as conn:
+        user_row = conn.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user_row or not verify_password(password, user_row["password_hash"]):
+        raise ValueError("Incorrect password.")
+    disable_2fa(user_id)
+    _audit(ctx, "auth.2fa_disabled", "user", user_id, {})
+    return {"ok": True, "message": "2FA disabled."}
+
+
+# ---------------------------------------------------------------------------
+# Backup Schedule handler
+# ---------------------------------------------------------------------------
+
+def handle_backup_schedule(ctx: RequestContext) -> dict[str, Any]:
+    from .scheduled_backup import get_backup_schedule_info
+    return get_backup_schedule_info()

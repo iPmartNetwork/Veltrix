@@ -8,7 +8,7 @@ from typing import Any
 
 from .db import connect, now_iso, row_to_dict, rows_to_dicts
 
-CHANNEL_TYPES = {"telegram", "webhook"}
+CHANNEL_TYPES = {"telegram", "webhook", "email"}
 
 
 def list_channels() -> list[dict[str, Any]]:
@@ -210,6 +210,9 @@ def send_channel_message(channel: dict[str, Any], text: str, payload: dict[str, 
     if channel["type"] == "webhook":
         send_webhook(config, payload)
         return
+    if channel["type"] == "email":
+        send_email_notification(config, text, payload)
+        return
     raise ValueError(f"Unsupported channel type: {channel['type']}")
 
 
@@ -235,6 +238,26 @@ def send_webhook(config: dict[str, Any], payload: dict[str, Any]) -> None:
     http_post_json(url, payload, headers=headers)
 
 
+def send_email_notification(config: dict[str, Any], text: str, payload: dict[str, Any]) -> None:
+    """Send notification via email channel."""
+    to = str(config.get("to") or "").strip()
+    if not to:
+        raise ValueError("Email recipient is required.")
+    from .email_notifier import send_email, is_email_configured
+    if not is_email_configured():
+        raise ValueError("SMTP is not configured. Set OUTPANEL_SMTP_HOST in environment.")
+    event = payload.get("event", "notification")
+    subject = f"[Veltrix] {event}"
+    html = f"""
+    <div style="font-family:Tahoma,Arial,sans-serif;padding:20px;max-width:600px;">
+        <h2 style="color:#058274;">Veltrix Notification</h2>
+        <pre style="background:#f5f5f5;padding:16px;border-radius:8px;white-space:pre-wrap;">{text}</pre>
+        <p style="color:#999;font-size:11px;margin-top:16px;">Event: {event} | {now_iso()}</p>
+    </div>
+    """
+    send_email(to, subject, html, body_text=text)
+
+
 def http_post_json(url: str, payload: dict[str, Any], *, headers: dict[str, str] | None = None) -> None:
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(url, data=body, method="POST",
@@ -254,7 +277,7 @@ def http_post_json(url: str, payload: dict[str, Any], *, headers: dict[str, str]
 def normalize_channel_payload(payload: dict[str, Any]) -> dict[str, Any]:
     channel_type = str(payload.get("type") or "").strip().lower()
     if channel_type not in CHANNEL_TYPES:
-        raise ValueError("Notification channel type must be telegram or webhook.")
+        raise ValueError("Notification channel type must be telegram, webhook, or email.")
     name = str(payload.get("name") or channel_type.title()).strip()
     config = payload.get("config") or {}
 
@@ -266,6 +289,12 @@ def normalize_channel_payload(payload: dict[str, Any]) -> dict[str, Any]:
         }
         if not normalized_config["bot_token"] or not normalized_config["chat_id"]:
             raise ValueError("Telegram bot_token and chat_id are required.")
+    elif channel_type == "email":
+        normalized_config = {
+            "to": str(config.get("to") or payload.get("to") or "").strip(),
+        }
+        if not normalized_config["to"]:
+            raise ValueError("Email recipient address is required.")
     else:
         normalized_config = {
             "url": str(config.get("url") or payload.get("url") or "").strip(),
