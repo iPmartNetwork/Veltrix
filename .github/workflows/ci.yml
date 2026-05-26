@@ -28,7 +28,7 @@ jobs:
         run: python -m compileall -q outpanel
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/ -v --tb=short
 
       - name: Verify routes build
         run: python -c "from outpanel.routes import build_router; r = build_router(); print(f'{len(r.routes)} routes OK')"
