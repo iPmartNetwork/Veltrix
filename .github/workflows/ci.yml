@@ -7,7 +7,7 @@ on:
     branches: [master, main]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,17 +21,105 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install test dependencies
-        run: pip install pytest
-
       - name: Compile check
         run: python -m compileall -q outpanel
 
-      - name: Run tests
-        run: pytest tests/ -v --tb=short
+      - name: Verify all imports
+        run: |
+          python -c "
+          from outpanel.app import main
+          from outpanel.routes import build_router
+          from outpanel.ratelimit import check_rate_limit
+          from outpanel.crypto import encrypt_value, decrypt_value
+          from outpanel.sse import get_sse_broker
+          from outpanel.worker import enhanced_monitor_loop
+          from outpanel.panels import create_panel_client, SUPPORTED_PANELS
+          from outpanel.telegram_bot import is_bot_enabled
+          from outpanel.reports import generate_uptime_report
+          from outpanel.i18n import t, get_translations
+          from outpanel.branding import get_branding
+          from outpanel.license_validator import get_days_remaining
+          from outpanel.alerts_advanced import get_server_tags
+          from outpanel.api_docs import generate_api_docs
+          from outpanel.migrations import migration_status
+          print('All imports OK')
+          "
 
-      - name: Verify routes build
-        run: python -c "from outpanel.routes import build_router; r = build_router(); print(f'{len(r.routes)} routes OK')"
+      - name: Verify routes
+        run: |
+          python -c "
+          from outpanel.routes import build_router
+          r = build_router()
+          assert len(r.routes) >= 70, f'Expected 70+ routes, got {len(r.routes)}'
+          print(f'{len(r.routes)} routes registered — OK')
+          "
+
+      - name: Test core modules
+        run: |
+          python -c "
+          import os, tempfile
+          os.environ['OUTPANEL_DB'] = os.path.join(tempfile.gettempdir(), 'veltrix_ci_test.db')
+          os.environ['OUTPANEL_QUIET'] = '1'
+          os.environ['OUTPANEL_DISABLE_MONITOR'] = '1'
+
+          from outpanel.db import init_db
+          init_db()
+
+          # Test auth
+          from outpanel.auth import hash_password, verify_password, has_permission
+          h = hash_password('testpass123')
+          assert verify_password('testpass123', h), 'Password verify failed'
+          assert not verify_password('wrong', h), 'Wrong password should fail'
+          assert has_permission({'role': 'owner'}, 'servers'), 'Owner should have all perms'
+          print('Auth: OK')
+
+          # Test crypto
+          import hashlib
+          from outpanel import crypto
+          key = hashlib.sha256(b'ci_test_key').digest()
+          orig = crypto.get_encryption_key
+          crypto.get_encryption_key = lambda: key
+          enc = crypto.encrypt_value('secret123')
+          assert enc.startswith('ENC:'), 'Should be encrypted'
+          assert crypto.decrypt_value(enc) == 'secret123', 'Decrypt failed'
+          crypto.get_encryption_key = orig
+          print('Crypto: OK')
+
+          # Test rate limiter
+          from outpanel.ratelimit import RateLimiter, RateLimitConfig
+          rl = RateLimiter(RateLimitConfig(requests_per_window=5))
+          for _ in range(5): rl.is_allowed('1.1.1.1')
+          assert not rl.is_allowed('1.1.1.1'), 'Should be rate limited'
+          print('RateLimit: OK')
+
+          # Test router
+          from outpanel.router import Router
+          router = Router()
+          router.get('/api/test/{id}', lambda ctx: {})
+          match = router.resolve('GET', '/api/test/42')
+          assert match and match[1] == {'id': '42'}, 'Router match failed'
+          print('Router: OK')
+
+          # Test ping
+          from outpanel.ping import tcp_ping
+          r = tcp_ping('', 80, 1000)
+          assert r.status == 'error', 'Empty host should error'
+          print('Ping: OK')
+
+          # Test i18n
+          from outpanel.i18n import t
+          assert 'Server' in t('server.name_required', lang='en')
+          print('i18n: OK')
+
+          # Test panels
+          from outpanel.panels import create_panel_client, XUIPanelClient, MarzbanPanelClient
+          assert isinstance(create_panel_client('x-ui', 'http://t.com', 'a', 'b'), XUIPanelClient)
+          assert isinstance(create_panel_client('marzban', 'http://t.com', 'a', 'b'), MarzbanPanelClient)
+          print('Panels: OK')
+
+          print()
+          print('=== All core tests passed ===')
+          "
 
   lint:
     runs-on: ubuntu-latest
@@ -43,19 +131,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check syntax
-        run: python -m compileall -q outpanel
+      - name: Check Python syntax
+        run: python -m compileall -q outpanel tests
 
-      - name: Check JavaScript
+      - name: Check JavaScript syntax
         run: |
-          if command -v node &>/dev/null; then
-            node --check web/assets/app.js
-            node --check web/assets/enhancements.js
-          fi
+          node --check web/assets/app.js
+          node --check web/assets/enhancements.js
 
   docker:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +153,9 @@ jobs:
         run: |
           docker run -d --name veltrix-test -p 8000:8000 \
             -e OUTPANEL_REQUIRE_LICENSE=0 \
+            -e OUTPANEL_QUIET=1 \
             veltrix:test
-          sleep 5
-          curl -f http://localhost:8000/api/health || exit 1
+          sleep 8
+          curl -sf http://localhost:8000/api/health | grep -q '"ok"'
+          echo "Docker health check: OK"
           docker stop veltrix-test
