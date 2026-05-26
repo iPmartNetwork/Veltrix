@@ -2,11 +2,11 @@
 #
 # ╔══════════════════════════════════════════════════════════════╗
 # ║              Veltrix — Intelligent Network Control           ║
-# ║                   Linux Installer v0.2.0                     ║
+# ║                   Linux Installer v0.3.0                     ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # One-line install:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/main/scripts/install-linux.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/master/scripts/install-linux.sh)
 #
 # Usage:
 #   sudo bash install-linux.sh              Interactive menu
@@ -15,6 +15,10 @@
 #   sudo bash install-linux.sh --demo       Install with demo data
 #   sudo bash install-linux.sh --uninstall  Remove Veltrix service
 #   sudo bash install-linux.sh --status     Show service status
+#
+# Mirror:
+#   Uses iPmartNetwork mirror (https://mirror.ipmartnet.work) by default
+#   for faster package downloads. Disable with: USE_IPMART_MIRROR=0
 #
 # Supported OS: Ubuntu 22.04+, Debian 12+, CentOS 9+, Fedora 38+, AlmaLinux 9+
 # Requirements: Python 3.12+, systemd, curl or wget
@@ -26,7 +30,7 @@ set -euo pipefail
 # Constants
 # ---------------------------------------------------------------------------
 
-readonly VERSION="0.2.0"
+readonly VERSION="0.3.0"
 readonly INSTALL_DIR="/opt/veltrix"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly BACKUP_DIR="${INSTALL_DIR}/backups"
@@ -40,6 +44,13 @@ readonly REPO_URL="https://github.com/iPmartNetwork/Veltrix.git"
 readonly MIN_PYTHON_MAJOR=3
 readonly MIN_PYTHON_MINOR=12
 readonly DEFAULT_PORT=8000
+
+# iPmartNetwork Mirror (faster package downloads for Iranian servers)
+readonly MIRROR_BASE="https://mirror.ipmartnet.work"
+readonly MIRROR_APT="${MIRROR_BASE}/ubuntu/jammy"
+readonly MIRROR_PIP="${MIRROR_BASE}/pypi/simple/"
+readonly MIRROR_NPM="${MIRROR_BASE}/npm/"
+readonly USE_MIRROR=${USE_IPMART_MIRROR:-1}  # Set to 0 to disable mirror
 
 # Colors
 readonly RED='\033[0;31m'
@@ -179,6 +190,12 @@ check_python() {
 install_python_auto() {
     log_step "Installing Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}"
 
+    # Configure iPmartNetwork mirror for faster downloads
+    if [[ "$USE_MIRROR" == "1" ]]; then
+        log_info "Using iPmartNetwork mirror for packages..."
+        configure_apt_mirror
+    fi
+
     case "$OS_NAME" in
         ubuntu|debian|linuxmint)
             apt-get update -qq
@@ -202,12 +219,62 @@ install_python_auto() {
             ;;
     esac
 
+    # Configure pip to use iPmartNetwork mirror
+    if [[ "$USE_MIRROR" == "1" ]]; then
+        configure_pip_mirror
+    fi
+
     # Verify installation
     check_python_silent || {
         log_error "Python installation failed."
         exit 1
     }
     log_success "Python installed successfully"
+}
+
+configure_apt_mirror() {
+    # Set iPmartNetwork APT mirror for Ubuntu/Debian
+    if [[ "$OS_NAME" == "ubuntu" || "$OS_NAME" == "debian" ]]; then
+        local codename
+        codename=$(lsb_release -cs 2>/dev/null || echo "jammy")
+        local mirror_url="${MIRROR_BASE}/ubuntu/${codename}"
+
+        log_info "Configuring APT mirror: ${mirror_url}"
+
+        # Backup original sources
+        cp /etc/apt/sources.list /etc/apt/sources.list.bak.veltrix 2>/dev/null || true
+
+        # Add iPmart mirror as additional source (don't replace existing)
+        cat > /etc/apt/sources.list.d/ipmartnetwork.list <<EOF
+deb [trusted=yes] ${mirror_url} ${codename} main restricted universe multiverse
+EOF
+        log_success "APT mirror configured"
+    fi
+}
+
+configure_pip_mirror() {
+    # Configure pip to use iPmartNetwork PyPI mirror
+    local pip_conf_dir="/etc/pip"
+    mkdir -p "$pip_conf_dir"
+
+    cat > "${pip_conf_dir}/pip.conf" <<EOF
+[global]
+index-url = ${MIRROR_PIP}
+trusted-host = mirror.ipmartnet.work
+timeout = 30
+EOF
+
+    # Also set for the veltrix user
+    local user_pip_dir="${INSTALL_DIR}/.config/pip"
+    mkdir -p "$user_pip_dir"
+    cat > "${user_pip_dir}/pip.conf" <<EOF
+[global]
+index-url = ${MIRROR_PIP}
+trusted-host = mirror.ipmartnet.work
+timeout = 30
+EOF
+
+    log_success "pip mirror configured: ${MIRROR_PIP}"
 }
 
 check_python_silent() {
@@ -254,6 +321,11 @@ run_prerequisites() {
     check_architecture
     check_systemd
     check_network_tools
+    if [[ "$USE_MIRROR" == "1" ]]; then
+        log_info "iPmartNetwork Mirror: ${CYAN}enabled${NC} (${MIRROR_BASE})"
+    else
+        log_info "iPmartNetwork Mirror: disabled (using default repos)"
+    fi
     check_python
     check_disk_space
     check_port
@@ -452,6 +524,10 @@ show_completion() {
     echo -e "  ${YELLOW}→ Open the dashboard and create your admin account.${NC}"
     echo -e "  ${DIM}→ Edit ${ENV_FILE} to customize settings.${NC}"
     echo -e "  ${DIM}→ View logs: journalctl -u ${SERVICE_NAME} -f${NC}"
+    if [[ "$USE_MIRROR" == "1" ]]; then
+        echo -e "  ${DIM}→ Mirror: ${MIRROR_BASE} (pip + apt)${NC}"
+    fi
+    echo -e "  ${DIM}→ Docs: https://ipmartnet.work/docs${NC}"
     echo ""
 }
 
