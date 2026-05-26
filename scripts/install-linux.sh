@@ -30,7 +30,7 @@ set -euo pipefail
 # Constants
 # ---------------------------------------------------------------------------
 
-readonly VERSION="0.3.0"
+readonly VELTRIX_VERSION="0.3.0"
 readonly INSTALL_DIR="/opt/veltrix"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly BACKUP_DIR="${INSTALL_DIR}/backups"
@@ -78,7 +78,7 @@ print_banner() {
     echo "    ║          ╚████╔╝ ███████╗███████╗██║   ██║  ██║██╔╝ ██╗ ║"
     echo "    ║           ╚═══╝  ╚══════╝╚══════╝╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ║"
     echo "    ║                                                       ║"
-    echo "    ║           Intelligent Network Control  v${VERSION}         ║"
+    echo "    ║           Intelligent Network Control  v${VELTRIX_VERSION}         ║"
     echo "    ║                                                       ║"
     echo "    ╚═══════════════════════════════════════════════════════╝"
     echo -e "${NC}"
@@ -107,12 +107,46 @@ check_root() {
     fi
 }
 
+fix_system_time() {
+    # Fix SSL certificate errors caused by incorrect system clock
+    local year
+    year=$(date +%Y)
+    if [[ "$year" -lt 2025 ]]; then
+        log_warn "System clock appears incorrect (year: ${year}). Attempting to sync..."
+        if command -v timedatectl &>/dev/null; then
+            timedatectl set-ntp true 2>/dev/null || true
+            sleep 2
+        fi
+        if command -v ntpdate &>/dev/null; then
+            ntpdate -s pool.ntp.org 2>/dev/null || true
+        elif command -v chronyd &>/dev/null; then
+            chronyc makestep 2>/dev/null || true
+        elif command -v date &>/dev/null && command -v curl &>/dev/null; then
+            # Fallback: get time from HTTP header
+            local http_date
+            http_date=$(curl -sI --insecure https://google.com 2>/dev/null | grep -i "^date:" | cut -d' ' -f2-)
+            if [[ -n "$http_date" ]]; then
+                date -s "$http_date" 2>/dev/null || true
+            fi
+        fi
+        year=$(date +%Y)
+        if [[ "$year" -ge 2025 ]]; then
+            log_success "System clock synchronized"
+        else
+            log_warn "Could not sync clock. SSL errors may occur."
+            log_info "Fix manually: apt install ntpdate && ntpdate pool.ntp.org"
+        fi
+    else
+        log_success "System clock OK ($(date '+%Y-%m-%d %H:%M %Z'))"
+    fi
+}
+
 detect_os() {
     if [[ -f /etc/os-release ]]; then
-        . /etc/os-release
-        OS_NAME="${ID}"
-        OS_VERSION="${VERSION_ID}"
-        OS_PRETTY="${PRETTY_NAME}"
+        # Source os-release in a subshell to avoid variable conflicts
+        OS_NAME=$(. /etc/os-release && echo "$ID")
+        OS_VERSION=$(. /etc/os-release && echo "$VERSION_ID")
+        OS_PRETTY=$(. /etc/os-release && echo "$PRETTY_NAME")
     else
         OS_NAME="unknown"
         OS_VERSION="0"
@@ -166,7 +200,7 @@ check_python() {
     if [[ -n "$python_cmd" ]]; then
         local version
         version=$($python_cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')")
-        log_success "Python ${version} (${python_cmd})"
+        log_success "Python ${VELTRIX_VERSION} (${python_cmd})"
         PYTHON_BIN=$(command -v "$python_cmd")
         return 0
     fi
@@ -317,6 +351,7 @@ check_port() {
 run_prerequisites() {
     log_step "Checking prerequisites"
     separator
+    fix_system_time
     detect_os
     check_architecture
     check_systemd
@@ -403,7 +438,7 @@ create_env_file() {
 # ═══════════════════════════════════════════════════════════
 # Veltrix Configuration
 # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-# Version: ${VERSION}
+# Version: ${VELTRIX_VERSION}
 # ═══════════════════════════════════════════════════════════
 
 # ─── Server ───────────────────────────────────────────────
@@ -510,7 +545,7 @@ show_completion() {
 
     echo ""
     echo -e "  ${GREEN}${BOLD}═══════════════════════════════════════════════════════${NC}"
-    echo -e "  ${GREEN}${BOLD}  ✓  Veltrix v${VERSION} installed successfully!${NC}"
+    echo -e "  ${GREEN}${BOLD}  ✓  Veltrix v${VELTRIX_VERSION} installed successfully!${NC}"
     echo -e "  ${GREEN}${BOLD}═══════════════════════════════════════════════════════${NC}"
     echo ""
     echo -e "  ${BOLD}Dashboard${NC}        http://${server_ip}:${DEFAULT_PORT}"
@@ -593,7 +628,7 @@ from outpanel import __version__; print(__version__)
     fi
 
     log_info "Current version: ${old_version}"
-    log_info "New version: ${VERSION}"
+    log_info "New version: ${VELTRIX_VERSION}"
 
     systemctl stop "$SERVICE_NAME" 2>/dev/null || true
     copy_files "$(cd "$(dirname "$0")/.." && pwd)"
@@ -601,7 +636,7 @@ from outpanel import __version__; print(__version__)
     start_service
 
     echo ""
-    log_success "Update complete: ${old_version} → ${VERSION}"
+    log_success "Update complete: ${old_version} → ${VELTRIX_VERSION}"
     log_info "Database migrations will run automatically on startup."
     echo ""
 }
