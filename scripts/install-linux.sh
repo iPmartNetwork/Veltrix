@@ -68,28 +68,26 @@ readonly NC='\033[0m'
 print_banner() {
     clear 2>/dev/null || true
     echo ""
-    echo -e "${CYAN}${BOLD}"
-    echo "    ╔═══════════════════════════════════════════════════════╗"
-    echo "    ║                                                       ║"
-    echo "    ║         ██╗   ██╗███████╗██╗  ████████╗██████╗ ██╗  ██╗ ║"
-    echo "    ║         ██║   ██║██╔════╝██║  ╚══██╔══╝██╔══██╗╚██╗██╔╝ ║"
-    echo "    ║         ██║   ██║█████╗  ██║     ██║   ██████╔╝ ╚███╔╝  ║"
-    echo "    ║         ╚██╗ ██╔╝██╔══╝  ██║     ██║   ██╔══██╗ ██╔██╗  ║"
-    echo "    ║          ╚████╔╝ ███████╗███████╗██║   ██║  ██║██╔╝ ██╗ ║"
-    echo "    ║           ╚═══╝  ╚══════╝╚══════╝╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ║"
-    echo "    ║                                                       ║"
-    echo "    ║           Intelligent Network Control  v${VELTRIX_VERSION}         ║"
-    echo "    ║                                                       ║"
-    echo "    ╚═══════════════════════════════════════════════════════╝"
+    echo -e "${CYAN}"
+    echo "    ┌─────────────────────────────────────────────────────────┐"
+    echo "    │                                                         │"
+    echo "    │    ╦  ╦╔═╗╦  ╔╦╗╦═╗╦═╗ ╦                               │"
+    echo "    │    ╚╗╔╝║╣ ║   ║ ╠╦╝║╔╩╦╝                               │"
+    echo "    │     ╚╝ ╚═╝╩═╝╩ ╩╚═╩╩ ╚═                               │"
+    echo "    │                                                         │"
+    echo -e "    │     ${NC}${BOLD}Intelligent Network Control${NC}${CYAN}                          │"
+    echo -e "    │     ${NC}${DIM}Version ${VELTRIX_VERSION} — iPmartNetwork${NC}${CYAN}                       │"
+    echo "    │                                                         │"
+    echo "    └─────────────────────────────────────────────────────────┘"
     echo -e "${NC}"
     echo ""
 }
 
 log_info()    { echo -e "  ${GREEN}●${NC} $1"; }
 log_success() { echo -e "  ${GREEN}✓${NC} $1"; }
-log_warn()    { echo -e "  ${YELLOW}⚠${NC} $1"; }
+log_warn()    { echo -e "  ${YELLOW}⚠${NC}  $1"; }
 log_error()   { echo -e "  ${RED}✗${NC} $1"; }
-log_step()    { echo -e "\n  ${CYAN}${BOLD}▸ $1${NC}"; }
+log_step()    { echo -e "\n  ${CYAN}${BOLD}▶ $1${NC}"; echo -e "  ${CYAN}─────────────────────────────────────────${NC}"; }
 
 separator() {
     echo -e "  ${DIM}─────────────────────────────────────────────────────${NC}"
@@ -544,25 +542,39 @@ show_completion() {
     server_ip=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "YOUR_SERVER_IP")
 
     echo ""
-    echo -e "  ${GREEN}${BOLD}═══════════════════════════════════════════════════════${NC}"
-    echo -e "  ${GREEN}${BOLD}  ✓  Veltrix v${VELTRIX_VERSION} installed successfully!${NC}"
-    echo -e "  ${GREEN}${BOLD}═══════════════════════════════════════════════════════${NC}"
+    echo -e "  ${GREEN}┌─────────────────────────────────────────────────────────┐${NC}"
+    echo -e "  ${GREEN}│                                                         │${NC}"
+    echo -e "  ${GREEN}│${NC}   ${GREEN}${BOLD}✓  Veltrix v${VELTRIX_VERSION} installed successfully!${NC}          ${GREEN}│${NC}"
+    echo -e "  ${GREEN}│                                                         │${NC}"
+    echo -e "  ${GREEN}└─────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -e "  ${BOLD}Dashboard${NC}        http://${server_ip}:${DEFAULT_PORT}"
-    echo -e "  ${BOLD}Configuration${NC}    ${ENV_FILE}"
-    echo -e "  ${BOLD}Database${NC}         ${DATA_DIR}/veltrix.db"
-    echo -e "  ${BOLD}Logs${NC}             ${LOG_DIR}/veltrix.log"
-    echo -e "  ${BOLD}Service${NC}          systemctl status ${SERVICE_NAME}"
+    echo -e "  ${CYAN}┌─── Connection Info ────────────────────────────────────┐${NC}"
+    echo -e "  ${CYAN}│${NC}                                                         ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   🌐  Dashboard     ${BOLD}http://${server_ip}:${DEFAULT_PORT}${NC}        ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   📁  Config        ${DIM}${ENV_FILE}${NC}                  ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   💾  Database      ${DIM}${DATA_DIR}/veltrix.db${NC}       ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   📋  Logs          ${DIM}${LOG_DIR}/veltrix.log${NC}       ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ⚙️   Service       ${DIM}systemctl status ${SERVICE_NAME}${NC}       ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}                                                         ${CYAN}│${NC}"
+    echo -e "  ${CYAN}└─────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    separator
+    echo -e "  ${YELLOW}┌─── Next Steps ─────────────────────────────────────────┐${NC}"
+    echo -e "  ${YELLOW}│${NC}                                                         ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}│${NC}   1. Open the dashboard in your browser                 ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}│${NC}   2. Create your admin account                          ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}│${NC}   3. Add your first x-ui server                         ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}│${NC}   4. Run sync to import outbounds                       ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}│${NC}                                                         ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}└─────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -e "  ${YELLOW}→ Open the dashboard and create your admin account.${NC}"
-    echo -e "  ${DIM}→ Edit ${ENV_FILE} to customize settings.${NC}"
-    echo -e "  ${DIM}→ View logs: journalctl -u ${SERVICE_NAME} -f${NC}"
+    echo -e "  ${DIM}Commands:${NC}"
+    echo -e "  ${DIM}  View logs     →  journalctl -u ${SERVICE_NAME} -f${NC}"
+    echo -e "  ${DIM}  Restart       →  systemctl restart ${SERVICE_NAME}${NC}"
+    echo -e "  ${DIM}  Edit config   →  nano ${ENV_FILE}${NC}"
     if [[ "$USE_MIRROR" == "1" ]]; then
-        echo -e "  ${DIM}→ Mirror: ${MIRROR_BASE} (pip + apt)${NC}"
+        echo -e "  ${DIM}  Mirror        →  ${MIRROR_BASE}${NC}"
     fi
-    echo -e "  ${DIM}→ Docs: https://ipmartnet.work/docs${NC}"
+    echo -e "  ${DIM}  Docs          →  https://github.com/iPmartNetwork/Veltrix${NC}"
     echo ""
 }
 
@@ -571,16 +583,20 @@ show_completion() {
 # ---------------------------------------------------------------------------
 
 show_menu() {
-    echo -e "  ${BOLD}Select an action:${NC}"
+    echo -e "  ${CYAN}┌─────────────────────────────────────────┐${NC}"
+    echo -e "  ${CYAN}│${NC}  ${BOLD}Select an action:${NC}                       ${CYAN}│${NC}"
+    echo -e "  ${CYAN}├─────────────────────────────────────────┤${NC}"
+    echo -e "  ${CYAN}│${NC}                                         ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${GREEN}1${NC})  🚀  Fresh Install                  ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${GREEN}2${NC})  🔄  Update Existing                ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${GREEN}3${NC})  🎭  Install with Demo Data         ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${YELLOW}4${NC})  📊  Show Service Status            ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${RED}5${NC})  🗑   Uninstall                     ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}   ${DIM}0${NC})  ❌  Exit                           ${CYAN}│${NC}"
+    echo -e "  ${CYAN}│${NC}                                         ${CYAN}│${NC}"
+    echo -e "  ${CYAN}└─────────────────────────────────────────┘${NC}"
     echo ""
-    echo -e "    ${CYAN}1${NC})  Install Veltrix (fresh)"
-    echo -e "    ${CYAN}2${NC})  Update existing installation"
-    echo -e "    ${CYAN}3${NC})  Install with demo data"
-    echo -e "    ${CYAN}4${NC})  Show service status"
-    echo -e "    ${CYAN}5${NC})  Uninstall"
-    echo -e "    ${CYAN}0${NC})  Exit"
-    echo ""
-    read -p "  Choice [0-5]: " choice
+    read -p "  Enter choice [0-5]: " choice
     echo ""
 
     case "${choice}" in
@@ -589,7 +605,7 @@ show_menu() {
         3) do_install_demo ;;
         4) do_status ;;
         5) do_uninstall ;;
-        0) echo "  Bye."; exit 0 ;;
+        0) echo -e "  ${DIM}Goodbye.${NC}"; exit 0 ;;
         *) log_error "Invalid choice."; echo ""; show_menu ;;
     esac
 }
