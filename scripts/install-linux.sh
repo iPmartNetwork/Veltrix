@@ -569,19 +569,21 @@ show_menu() {
     echo -e "    ${GREEN}1${NC})  Fresh Install"
     echo -e "    ${GREEN}2${NC})  Update Existing Installation"
     echo -e "    ${GREEN}3${NC})  Install with Demo Data"
-    echo -e "    ${YELLOW}4${NC})  Show Service Status"
-    echo -e "    ${RED}5${NC})  Uninstall"
+    echo -e "    ${CYAN}4${NC})  Setup HTTPS (Nginx + SSL)"
+    echo -e "    ${YELLOW}5${NC})  Show Service Status"
+    echo -e "    ${RED}6${NC})  Uninstall"
     echo -e "    ${DIM}0${NC})  Exit"
     echo ""
-    read -p "    Choice [0-5]: " choice
+    read -p "    Choice [0-6]: " choice
     echo ""
 
     case "${choice}" in
         1) do_install ;;
         2) do_update ;;
         3) do_install_demo ;;
-        4) do_status ;;
-        5) do_uninstall ;;
+        4) do_setup_ssl ;;
+        5) do_status ;;
+        6) do_uninstall ;;
         0) echo ""; exit 0 ;;
         *) log_error "Invalid choice."; echo ""; show_menu ;;
     esac
@@ -746,6 +748,379 @@ do_uninstall() {
 }
 
 # ---------------------------------------------------------------------------
+# HTTPS / Nginx / SSL Setup
+# ---------------------------------------------------------------------------
+
+do_setup_ssl() {
+    log_step "HTTPS Setup (Nginx + SSL)"
+    echo ""
+    echo -e "    ${BOLD}Select SSL mode:${NC}"
+    echo ""
+    echo -e "    ${GREEN}1${NC})  Auto SSL with Certbot (Let's Encrypt)"
+    echo -e "    ${GREEN}2${NC})  Custom certificate files (fullchain.pem + privkey.pem)"
+    echo -e "    ${YELLOW}3${NC})  HTTP only (remove HTTPS)"
+    echo -e "    ${DIM}0${NC})  Back"
+    echo ""
+    read -p "    Choice [0-3]: " ssl_choice
+    echo ""
+
+    case "${ssl_choice}" in
+        1) setup_ssl_certbot ;;
+        2) setup_ssl_custom ;;
+        3) setup_http_only ;;
+        0) show_menu ;;
+        *) log_error "Invalid choice."; do_setup_ssl ;;
+    esac
+}
+
+install_nginx() {
+    log_step "Installing Nginx"
+
+    if command -v nginx &>/dev/null; then
+        log_success "Nginx already installed"
+        return
+    fi
+
+    case "$OS_NAME" in
+        ubuntu|debian|linuxmint)
+            apt-get update -qq
+            apt-get install -y -qq nginx
+            ;;
+        fedora|centos|rhel|almalinux|rocky)
+            dnf install -y -q nginx
+            ;;
+        arch|manjaro)
+            pacman -Sy --noconfirm nginx
+            ;;
+        *)
+            log_error "Cannot auto-install Nginx on ${OS_NAME}."
+            log_info "Install Nginx manually and re-run this option."
+            exit 1
+            ;;
+    esac
+
+    systemctl enable nginx --quiet 2>/dev/null
+    log_success "Nginx installed"
+}
+
+install_certbot() {
+    log_step "Installing Certbot"
+
+    if command -v certbot &>/dev/null; then
+        log_success "Certbot already installed"
+        return
+    fi
+
+    case "$OS_NAME" in
+        ubuntu|debian|linuxmint)
+            apt-get update -qq
+            apt-get install -y -qq certbot python3-certbot-nginx
+            ;;
+        fedora|centos|rhel|almalinux|rocky)
+            dnf install -y -q certbot python3-certbot-nginx
+            ;;
+        arch|manjaro)
+            pacman -Sy --noconfirm certbot certbot-nginx
+            ;;
+        *)
+            log_error "Cannot auto-install Certbot on ${OS_NAME}."
+            exit 1
+            ;;
+    esac
+
+    log_success "Certbot installed"
+}
+
+setup_ssl_certbot() {
+    echo ""
+    read -p "    Enter your domain (e.g. panel.example.com): " DOMAIN
+    echo ""
+
+    if [[ -z "$DOMAIN" ]]; then
+        log_error "Domain is required."
+        return
+    fi
+
+    read -p "    Enter email for Let's Encrypt (optional): " LE_EMAIL
+    echo ""
+
+    # Detect OS if not done
+    if [[ -z "${OS_NAME:-}" ]]; then
+        OS_NAME=$(. /etc/os-release 2>/dev/null && echo "$ID" || echo "unknown")
+    fi
+
+    install_nginx
+    install_certbot
+
+    # Create initial HTTP config for certbot validation
+    log_step "Configuring Nginx"
+    write_nginx_config "$DOMAIN" "http"
+
+    # Reload nginx for certbot
+    nginx -t 2>/dev/null && systemctl reload nginx
+
+    # Get certificate
+    log_step "Obtaining SSL certificate"
+    local certbot_args="--nginx -d ${DOMAIN} --non-interactive --agree-tos"
+    if [[ -n "$LE_EMAIL" ]]; then
+        certbot_args="${certbot_args} --email ${LE_EMAIL}"
+    else
+        certbot_args="${certbot_args} --register-unsafely-without-email"
+    fi
+
+    if certbot $certbot_args 2>&1; then
+        log_success "SSL certificate obtained for ${DOMAIN}"
+    else
+        log_error "Certbot failed. Check DNS and firewall (port 80 must be open)."
+        log_info "You can retry with: certbot --nginx -d ${DOMAIN}"
+        return
+    fi
+
+    # Write final HTTPS config
+    local cert_path="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
+    local key_path="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
+    write_nginx_config "$DOMAIN" "https" "$cert_path" "$key_path"
+
+    nginx -t 2>/dev/null && systemctl reload nginx
+
+    # Setup auto-renewal
+    log_step "Setting up auto-renewal"
+    systemctl enable certbot.timer 2>/dev/null || true
+    systemctl start certbot.timer 2>/dev/null || true
+    log_success "Auto-renewal enabled"
+
+    show_ssl_completion "$DOMAIN"
+}
+
+setup_ssl_custom() {
+    echo ""
+    read -p "    Enter your domain (e.g. panel.example.com): " DOMAIN
+    echo ""
+
+    if [[ -z "$DOMAIN" ]]; then
+        log_error "Domain is required."
+        return
+    fi
+
+    read -p "    Path to fullchain.pem: " CERT_PATH
+    read -p "    Path to privkey.pem:   " KEY_PATH
+    echo ""
+
+    # Validate files exist
+    if [[ ! -f "$CERT_PATH" ]]; then
+        log_error "Certificate file not found: ${CERT_PATH}"
+        return
+    fi
+    if [[ ! -f "$KEY_PATH" ]]; then
+        log_error "Private key file not found: ${KEY_PATH}"
+        return
+    fi
+
+    # Detect OS if not done
+    if [[ -z "${OS_NAME:-}" ]]; then
+        OS_NAME=$(. /etc/os-release 2>/dev/null && echo "$ID" || echo "unknown")
+    fi
+
+    install_nginx
+
+    log_step "Configuring Nginx with custom certificate"
+    write_nginx_config "$DOMAIN" "https" "$CERT_PATH" "$KEY_PATH"
+
+    if nginx -t 2>/dev/null; then
+        systemctl reload nginx
+        log_success "Nginx configured with custom SSL"
+    else
+        log_error "Nginx configuration test failed."
+        log_info "Check: nginx -t"
+        return
+    fi
+
+    show_ssl_completion "$DOMAIN"
+}
+
+setup_http_only() {
+    echo ""
+    read -p "    Enter your domain (or leave empty for IP access): " DOMAIN
+    echo ""
+
+    if [[ -z "${OS_NAME:-}" ]]; then
+        OS_NAME=$(. /etc/os-release 2>/dev/null && echo "$ID" || echo "unknown")
+    fi
+
+    install_nginx
+
+    log_step "Configuring Nginx (HTTP only)"
+    write_nginx_config "${DOMAIN:-_}" "http"
+
+    if nginx -t 2>/dev/null; then
+        systemctl reload nginx
+        log_success "Nginx configured (HTTP only)"
+    else
+        log_error "Nginx configuration test failed."
+        return
+    fi
+
+    echo ""
+    local access_url="http://${DOMAIN:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
+    log_success "Dashboard accessible at: ${access_url}"
+    echo ""
+}
+
+write_nginx_config() {
+    local domain="$1"
+    local mode="$2"
+    local cert_path="${3:-}"
+    local key_path="${4:-}"
+    local conf_file="/etc/nginx/sites-available/veltrix"
+    local conf_link="/etc/nginx/sites-enabled/veltrix"
+
+    # Create sites-available/enabled if they don't exist (some distros use conf.d)
+    if [[ -d /etc/nginx/sites-available ]]; then
+        local use_sites=true
+    else
+        conf_file="/etc/nginx/conf.d/veltrix.conf"
+        conf_link=""
+        local use_sites=false
+    fi
+
+    if [[ "$mode" == "https" ]]; then
+        cat > "$conf_file" <<EOF
+# Veltrix HTTPS Configuration
+# Generated by Veltrix installer on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${domain};
+
+    # Redirect HTTP to HTTPS
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+
+    # Certbot challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name ${domain};
+
+    ssl_certificate ${cert_path};
+    ssl_certificate_key ${key_path};
+
+    # SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Proxy to Veltrix
+    location / {
+        proxy_pass http://127.0.0.1:${DEFAULT_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+        proxy_buffering off;
+    }
+
+    # SSE support
+    location /api/events {
+        proxy_pass http://127.0.0.1:${DEFAULT_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+    else
+        cat > "$conf_file" <<EOF
+# Veltrix HTTP Configuration
+# Generated by Veltrix installer on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${domain};
+
+    # Proxy to Veltrix
+    location / {
+        proxy_pass http://127.0.0.1:${DEFAULT_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+        proxy_buffering off;
+    }
+
+    # SSE support
+    location /api/events {
+        proxy_pass http://127.0.0.1:${DEFAULT_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+    fi
+
+    # Enable site
+    if [[ "$use_sites" == "true" && -n "$conf_link" ]]; then
+        rm -f /etc/nginx/sites-enabled/default 2>/dev/null
+        ln -sf "$conf_file" "$conf_link"
+    fi
+
+    log_success "Nginx config written: ${conf_file}"
+}
+
+show_ssl_completion() {
+    local domain="$1"
+    echo ""
+    log_success "HTTPS setup complete"
+    echo ""
+    echo -e "    ${BOLD}Access:${NC}         https://${domain}"
+    echo -e "    ${BOLD}HTTP redirect:${NC}  http://${domain} -> https://${domain}"
+    echo -e "    ${BOLD}Nginx config:${NC}   /etc/nginx/sites-available/veltrix"
+    echo -e "    ${BOLD}SSL test:${NC}       curl -I https://${domain}"
+    echo ""
+    echo -e "    ${DIM}Nginx commands:${NC}"
+    echo -e "    ${DIM}  Test config  ->  nginx -t${NC}"
+    echo -e "    ${DIM}  Reload       ->  systemctl reload nginx${NC}"
+    echo -e "    ${DIM}  Renew cert   ->  certbot renew${NC}"
+    echo ""
+}
+
+# ---------------------------------------------------------------------------
 # Entry Point
 # ---------------------------------------------------------------------------
 
@@ -756,10 +1131,11 @@ case "${1:-}" in
     --install)   do_install ;;
     --update)    do_update ;;
     --demo)      do_install_demo ;;
+    --ssl)       do_setup_ssl ;;
     --uninstall) do_uninstall ;;
     --status)    do_status ;;
     --help|-h)
-        echo "  Usage: sudo bash $0 [--install|--update|--demo|--uninstall|--status]"
+        echo "  Usage: sudo bash $0 [--install|--update|--demo|--ssl|--uninstall|--status]"
         echo ""
         echo "  Without arguments, shows an interactive menu."
         exit 0
