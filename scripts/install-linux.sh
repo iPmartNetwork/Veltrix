@@ -587,14 +587,66 @@ show_menu() {
     esac
 }
 
+get_source_dir() {
+    # Determine where to get Veltrix source files from.
+    # If running from a cloned repo, use local files.
+    # If running via curl (stdin), clone the repo first.
+
+    local script_dir
+    script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd)" || script_dir=""
+
+    # Check if we're in a valid repo with outpanel/ directory
+    if [[ -n "$script_dir" && -d "${script_dir}/../outpanel" ]]; then
+        echo "${script_dir}/.."
+        return
+    fi
+
+    # Running from stdin (curl pipe) — need to clone
+    log_info "Downloading Veltrix from GitHub..."
+    local tmp_dir="/tmp/veltrix-install-$$"
+    rm -rf "$tmp_dir"
+
+    if command -v git &>/dev/null; then
+        git clone --depth 1 "$REPO_URL" "$tmp_dir" 2>/dev/null
+    else
+        # Fallback: download tarball
+        local tarball="/tmp/veltrix-$$.tar.gz"
+        if command -v curl &>/dev/null; then
+            curl -fsSL -o "$tarball" "https://github.com/iPmartNetwork/Veltrix/archive/refs/heads/master.tar.gz" 2>/dev/null || \
+            curl -fsSLk -o "$tarball" "https://github.com/iPmartNetwork/Veltrix/archive/refs/heads/master.tar.gz" 2>/dev/null
+        elif command -v wget &>/dev/null; then
+            wget -q -O "$tarball" "https://github.com/iPmartNetwork/Veltrix/archive/refs/heads/master.tar.gz" 2>/dev/null || \
+            wget -q --no-check-certificate -O "$tarball" "https://github.com/iPmartNetwork/Veltrix/archive/refs/heads/master.tar.gz" 2>/dev/null
+        fi
+        if [[ -f "$tarball" ]]; then
+            mkdir -p "$tmp_dir"
+            tar -xzf "$tarball" -C "$tmp_dir" --strip-components=1
+            rm -f "$tarball"
+        fi
+    fi
+
+    if [[ ! -d "${tmp_dir}/outpanel" ]]; then
+        log_error "Failed to download Veltrix source files."
+        log_info "Try: git clone ${REPO_URL} && cd Veltrix && sudo bash scripts/install-linux.sh"
+        exit 1
+    fi
+
+    log_success "Source downloaded to ${tmp_dir}"
+    echo "$tmp_dir"
+}
+
 do_install() {
     run_prerequisites
+    local source_dir
+    source_dir=$(get_source_dir)
     create_user
     create_directories
-    copy_files "$(cd "$(dirname "$0")/.." && pwd)"
+    copy_files "$source_dir"
     create_env_file
     install_service
     start_service
+    # Cleanup temp dir if used
+    [[ "$source_dir" == /tmp/veltrix-install-* ]] && rm -rf "$source_dir"
     show_completion
 }
 
@@ -624,7 +676,10 @@ from outpanel import __version__; print(__version__)
     log_info "New version: ${VELTRIX_VERSION}"
 
     systemctl stop "$SERVICE_NAME" 2>/dev/null || true
-    copy_files "$(cd "$(dirname "$0")/.." && pwd)"
+    local source_dir
+    source_dir=$(get_source_dir)
+    copy_files "$source_dir"
+    [[ "$source_dir" == /tmp/veltrix-install-* ]] && rm -rf "$source_dir"
     systemctl daemon-reload
     start_service
 
