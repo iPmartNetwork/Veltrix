@@ -170,6 +170,14 @@ def build_router() -> Router:
 
     # --- Backup Schedule ---
     router.get("/api/backups/schedule", handle_backup_schedule, permission="maintenance")
+    router.put("/api/backups/schedule", handle_backup_schedule_update, permission="maintenance")
+
+    # --- SSH Remote Management ---
+    router.get("/api/servers/{server_id}/ssh", handle_ssh_get, permission="servers")
+    router.post("/api/servers/{server_id}/ssh", handle_ssh_save, permission="servers")
+    router.delete("/api/servers/{server_id}/ssh", handle_ssh_delete, permission="servers")
+    router.post("/api/servers/{server_id}/ssh/restart", handle_ssh_restart, permission="servers")
+    router.get("/api/ssh/configs", handle_ssh_list, permission="servers")
 
     # --- Bulk Operations ---
     router.post("/api/bulk/ping", handle_bulk_ping, permission="servers")
@@ -1162,3 +1170,100 @@ def handle_2fa_disable(ctx: RequestContext) -> dict[str, Any]:
 def handle_backup_schedule(ctx: RequestContext) -> dict[str, Any]:
     from .scheduled_backup import get_backup_schedule_info
     return get_backup_schedule_info()
+
+
+def handle_backup_schedule_update(ctx: RequestContext) -> dict[str, Any]:
+    """Update backup schedule settings."""
+    ts = now_iso()
+    payload = ctx.body
+    with connect() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL
+            )
+        """)
+        if "hour" in payload:
+            conn.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('backup_hour', ?, ?)",
+                (str(int(payload["hour"])), ts),
+            )
+        if "retention" in payload:
+            conn.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('backup_retention', ?, ?)",
+                (str(int(payload["retention"])), ts),
+            )
+        if "enabled" in payload:
+            conn.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('backup_enabled', ?, ?)",
+                ("1" if payload["enabled"] else "0", ts),
+            )
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# SSH Remote Management handlers
+# ---------------------------------------------------------------------------
+
+def handle_ssh_get(ctx: RequestContext) -> dict[str, Any]:
+    from .ssh_manager import get_ssh_config
+    server_id = int(ctx.get_param("server_id"))
+    config = get_ssh_config(server_id)
+    return {"ssh": config}
+
+
+def handle_ssh_save(ctx: RequestContext) -> dict[str, Any]:
+    from .ssh_manager import save_ssh_credentials, init_ssh_table
+    init_ssh_table()
+    server_id = int(ctx.get_param("server_id"))
+    payload = ctx.body
+    result = save_ssh_credentials(
+        server_id=server_id,
+        ssh_host=str(payload.get("ssh_host") or "").strip(),
+        ssh_port=int(payload.get("ssh_port") or 22),
+        ssh_user=str(payload.get("ssh_user") or "root").strip(),
+        ssh_password=str(payload.get("ssh_password") or "").strip(),
+        restart_enabled=bool(payload.get("restart_enabled", True)),
+        restart_delay_minutes=int(payload.get("restart_delay_minutes") or 5),
+        restart_command=str(payload.get("restart_command") or "").strip(),
+    )
+    _audit(ctx, "ssh.save", "server", server_id, {"ssh_host": payload.get("ssh_host")})
+    return result
+
+
+def handle_ssh_delete(ctx: RequestContext) -> dict[str, Any]:
+    from .ssh_manager import delete_ssh_config
+    server_id = int(ctx.get_param("server_id"))
+    delete_ssh_config(server_id)
+    _audit(ctx, "ssh.delete", "server", server_id, {})
+    return {"ok": True}
+
+
+def handle_ssh_restart(ctx: RequestContext) -> dict[str, Any]:
+    """Manually trigger SSH restart for a server."""
+    from .ssh_manager import get_ssh_config, _execute_restart, init_ssh_table
+    from .crypto import decrypt_value
+    init_ssh_table()
+    server_id = int(ctx.get_param("server_id"))
+
+    with connect() as conn:
+        config = row_to_dict(conn.execute(
+            "SELECT * FROM server_ssh WHERE server_id = ?", (server_id,)
+        ).fetchone())
+
+    if not config:
+        raise ValueError("SSH not configured for this server.")
+
+    # Add server name
+    with connect() as conn:
+        server = row_to_dict(conn.execute("SELECT name FROM servers WHERE id=?", (server_id,)).fetchone())
+    config["server_name"] = server["name"] if server else "unknown"
+
+    result = _execute_restart(config)
+    _audit(ctx, "ssh.manual_restart", "server", server_id, result)
+    return result
+
+
+def handle_ssh_list(ctx: RequestContext) -> dict[str, Any]:
+    from .ssh_manager import list_ssh_configs, init_ssh_table
+    init_ssh_table()
+    return {"configs": list_ssh_configs()}

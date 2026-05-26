@@ -2515,3 +2515,56 @@ select:focus-visible {
     justify-content: center;
   }
 }
+
+
+/* ---------------------------------------------------------------------------
+   LAYOUT FIX — Fill empty left space
+--------------------------------------------------------------------------- */
+
+/* Make stats grid fill width better */
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+/* License panel — single column on smaller screens */
+@media (max-width: 1200px) {
+  .brand-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+  .brand-visual {
+    display: none;
+  }
+}
+
+/* Workspace takes full width */
+.workspace {
+  padding: 24px 32px;
+}
+
+/* Topbar fills better */
+.topbar {
+  min-height: 140px;
+}
+
+.topbar-copy h1 {
+  font-size: 24px;
+}
+
+/* Chart grid responsive */
+@media (min-width: 1400px) {
+  .chart-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .history-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Server detail fills width */
+.server-detail-body {
+  padding: 20px 24px;
+}
+
+.server-detail-overview {
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 2fr);
+}

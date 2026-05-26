@@ -88,6 +88,14 @@ def enhanced_monitor_loop(stop_event: threading.Event, interval: int) -> None:
         except Exception:
             pass
 
+        # Check for auto-restart via SSH
+        try:
+            from .ssh_manager import check_and_restart_servers, init_ssh_table
+            init_ssh_table()
+            check_and_restart_servers()
+        except Exception:
+            pass
+
         stop_event.wait(interval)
 
 
