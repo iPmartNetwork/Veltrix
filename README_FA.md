@@ -1,113 +1,56 @@
 <p align="center">
-  <img src="web/assets/veltrix-brand-board.jpg" alt="Veltrix — کنترل هوشمند شبکه" width="480"/>
-</p>
-
-<h1 align="center">Veltrix</h1>
-
-<p align="center">
-  <strong>کنترل هوشمند شبکه</strong><br>
-  داشبورد حرفه‌ای مدیریت سرورهای x-ui، مانیتورینگ اوت‌باندهای V2Ray، مدیریت رخدادها و کنترل لایسنس تجاری
+  <img src="img/Veltrix.svg" alt="Veltrix" width="280" height="280" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/نسخه-0.3.0-00bfa6?style=flat-square" alt="Version"/>
-  <img src="https://img.shields.io/badge/python-3.12+-3776ab?style=flat-square" alt="Python"/>
-  <img src="https://img.shields.io/badge/لایسنس-تجاری-red?style=flat-square" alt="License"/>
-  <img src="https://img.shields.io/badge/پلتفرم-Linux%20%7C%20Docker-333?style=flat-square" alt="Platform"/>
+  <strong>کنترل هوشمند شبکه — داشبورد حرفه‌ای مدیریت سرورهای x-ui/V2Ray</strong>
 </p>
 
 <p align="center">
-  <a href="README.md">🇬🇧 English Documentation</a> •
-  <a href="docs/INSTALL_GUIDE.md">راهنمای نصب</a> •
-  <a href="CHANGELOG.md">تاریخچه تغییرات</a> •
-  <a href="docs/ARCHITECTURE.md">معماری</a>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/نسخه-0.3.0-00bfa6?style=for-the-badge" alt="Version" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/لایسنس-تجاری-ef4444?style=for-the-badge" alt="License" /></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/iPmartNetwork/Veltrix/stargazers"><img src="https://img.shields.io/github/stars/iPmartNetwork/Veltrix?style=for-the-badge&color=f59e0b" alt="Stars" /></a>
+  <a href="https://github.com/iPmartNetwork/Veltrix/network/members"><img src="https://img.shields.io/github/forks/iPmartNetwork/Veltrix?style=for-the-badge&color=8b5cf6" alt="Forks" /></a>
+  <a href="https://github.com/iPmartNetwork/Veltrix/issues"><img src="https://img.shields.io/github/issues/iPmartNetwork/Veltrix?style=for-the-badge&color=ef4444" alt="Issues" /></a>
+  <a href="https://github.com/iPmartNetwork/Veltrix"><img src="https://img.shields.io/github/repo-size/iPmartNetwork/Veltrix?style=for-the-badge&color=06b6d4" alt="Repo Size" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/iPmartNetwork/Veltrix/commits/master"><img src="https://img.shields.io/github/last-commit/iPmartNetwork/Veltrix?style=for-the-badge&color=6366f1" alt="Last Commit" /></a>
+  <a href="https://github.com/iPmartNetwork/Veltrix/graphs/contributors"><img src="https://img.shields.io/github/contributors/iPmartNetwork/Veltrix?style=for-the-badge&color=ec4899" alt="Contributors" /></a>
+</p>
+
+<p align="center">
+  <a href="#-شروع-سریع">شروع سریع</a> •
+  <a href="#-قابلیتها">قابلیت‌ها</a> •
+  <a href="#-معماری">معماری</a> •
+  <a href="#%EF%B8%8F-فناوری">فناوری</a> •
+  <a href="#-استقرار">استقرار</a> •
+  <a href="./README.md">🇬🇧 English</a> •
+  <a href="./CHANGELOG.md">تغییرات</a>
 </p>
 
 ---
 
-## معرفی
+## 📋 معرفی
 
-**Veltrix** یک اپلیکیشن وب self-hosted برای فروشندگان اوت‌باند، اپراتورهای شبکه و تیم‌هایی است که چندین سرور x-ui/V2Ray را مدیریت می‌کنند. این محصول مانیتورینگ منابع سرور، بررسی سلامت اوت‌باندها، مدیریت رخدادها، اعلان‌ها، بکاپ، کنترل دسترسی و لایسنس تجاری را در یک داشبورد عملیاتی واحد ارائه می‌دهد.
+**Veltrix** یک داشبورد عملیاتی self-hosted برای فروشندگان اوت‌باند، اپراتورهای شبکه و تیم‌هایی است که چندین سرور x-ui/V2Ray را مدیریت می‌کنند. مانیتورینگ سرور، بررسی سلامت اوت‌باندها، مدیریت رخدادها، اعلان‌ها، گزارش‌دهی و لایسنس تجاری در یک رابط حرفه‌ای واحد.
 
-Veltrix به عنوان **نرم‌افزار تجاری** طراحی شده است. سرور لایسنس خصوصی و زیرساخت صدور لایسنس عمداً در این مخزن قرار نگرفته‌اند.
-
----
-
-## قابلیت‌های کلیدی
-
-### مدیریت سرور
-- مدیریت چندین پنل x-ui با احراز هویت نام‌کاربری/رمز یا API Token
-- همگام‌سازی خودکار inbound ها (به عنوان اوت‌باند/مسیر V2Ray)
-- مانیتورینگ CPU، RAM، دیسک، آپتایم و وضعیت Xray
-- امتیاز سلامت سرور (۰ تا ۱۰۰) با درجه‌بندی A تا F
-
-### مانیتورینگ و اعلان
-- تست TCP ping برای هر اوت‌باند با آستانه قابل تنظیم
-- تشخیص وضعیت: `سالم`، `پینگ بالا`، `تایم‌اوت`، `خطا`، `غیرفعال`
-- غیرفعال‌سازی خودکار اوت‌باند بعد از خرابی مکرر
-- آپدیت لحظه‌ای با Server-Sent Events (SSE)
-- Worker پس‌زمینه با interval قابل تنظیم
-
-### مدیریت رخدادها
-- چرخه حیات رخداد: `باز` ← `تایید شده` ← `حل شده`
-- ایجاد خودکار رخداد از خرابی‌های مداوم
-- اعلان مرورگر، ربات تلگرام و Webhook
-- ارسال event به سیستم‌های خارجی (Zapier, n8n, Make)
-
-### گزارش‌دهی و خروجی
-- گزارش uptime و availability (دوره ۷/۳۰/۹۰ روزه)
-- گزارش عملکرد اوت‌باندها با آمار latency
-- خروجی CSV برای سرورها، اوت‌باندها و رخدادها
-- گزارش هفتگی خودکار به کانال‌های اعلان
-
-### امنیت و کنترل دسترسی
-- حساب ادمین اصلی با دسترسی کامل
-- تا ۱۰ حساب مدیر با دسترسی بخش‌بندی شده
-- هش رمز عبور PBKDF2-SHA256 (۲۶۰,۰۰۰ تکرار)
-- رمزنگاری AES-256 برای credentials ذخیره‌شده
-- محدودیت نرخ API (۱۲۰ درخواست/دقیقه + محافظت burst)
-- محدودیت ورود ناموفق با قفل IP
-- کوکی نشست HttpOnly با انقضای ۷ روزه
-- لاگ حسابرسی برای تمام عملیات حساس
-
-### داشبورد
-- رابط فارسی RTL حرفه‌ای با حالت تاریک (Dark Mode)
-- آپدیت لحظه‌ای وضعیت بدون بارگذاری مجدد صفحه
-- نمودارهای تعاملی CPU/RAM و تاریخچه پینگ
-- صفحه‌بندی جداول، جستجو و فیلتر وضعیت
-- پشتیبانی PWA (قابل نصب روی موبایل)
-- برندینگ سفارشی (لوگو، رنگ، نام محصول)
-- پشتیبانی چندزبانه (فارسی + انگلیسی)
-
-### لایسنس تجاری
-- فعال‌سازی لایسنس با سرور لایسنس ریموت
-- اتصال IP (یک لایسنس برای هر IP عمومی سرور)
-- محدودیت سرور بر اساس پلن (Pro: ۲۰، Enterprise: ۶۰)
-- اعتبارسنجی توکن امضاشده Ed25519
-- دوره مهلت آفلاین با توکن‌های کش‌شده
+طراحی شده به عنوان **نرم‌افزار تجاری** با سرور لایسنس خصوصی.
 
 ---
 
-## نیازمندی‌ها
-
-- Python 3.12 یا جدیدتر
-- Linux برای نصب production (systemd)
-- Docker (اختیاری، برای اجرای کانتینری)
-- دسترسی پنل x-ui برای هر سرور مدیریت‌شده
-
-Veltrix کاملاً روی کتابخانه استاندارد Python اجرا می‌شود — نیازی به پکیج خارجی نیست.
-
----
-
-## شروع سریع
-
-### نصب یک‌خطی (Linux)
+## ⚡ شروع سریع
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/main/scripts/install-linux.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/master/scripts/install-linux.sh)
 ```
 
-### نصب روی سرور Linux (دستی)
+یا دستی:
 
 ```bash
 git clone https://github.com/iPmartNetwork/Veltrix.git
@@ -115,23 +58,7 @@ cd Veltrix
 sudo bash scripts/install-linux.sh
 ```
 
-اسکریپت نصب شامل:
-- منوی تعاملی با ۵ گزینه (نصب، آپدیت، دمو، وضعیت، حذف)
-- نصب خودکار Python 3.12 در صورت عدم وجود
-- تشخیص سیستم‌عامل (Ubuntu, Debian, CentOS, Fedora, AlmaLinux, Arch)
-- تولید خودکار کلید رمزنگاری و توکن API
-- سرویس systemd با تنظیمات امنیتی
-- حالت غیرتعاملی: `--install`, `--update`, `--demo`, `--uninstall`
-
-### توسعه محلی
-
-```bash
-python -m outpanel.app --host 127.0.0.1 --port 8000
-```
-
-آدرس `http://127.0.0.1:8000` را باز کنید و حساب ادمین بسازید.
-
-### Docker
+یا با Docker:
 
 ```bash
 docker compose up -d
@@ -139,103 +66,191 @@ docker compose up -d
 
 ---
 
-## پیکربندی
+## ✨ قابلیت‌ها
 
-تمام تنظیمات از طریق متغیرهای محیطی انجام می‌شود. فایل [`.env.example`](.env.example) را مشاهده کنید.
+### 🖥 مدیریت سرور
 
-| متغیر | توضیح | پیش‌فرض |
-|--------|-------|---------|
-| `OUTPANEL_PORT` | پورت سرور HTTP | 8000 |
-| `OUTPANEL_DB` | مسیر دیتابیس SQLite | data/veltrix.db |
-| `OUTPANEL_MONITOR_INTERVAL` | فاصله مانیتورینگ (ثانیه) | 30 |
-| `OUTPANEL_API_TOKEN` | توکن احراز هویت API | — |
-| `OUTPANEL_ENCRYPTION_KEY` | کلید AES برای رمزنگاری credentials | — |
-| `OUTPANEL_LANGUAGE` | زبان رابط (fa/en) | fa |
-| `OUTPANEL_AUTO_DISABLE_THRESHOLD` | غیرفعال‌سازی خودکار بعد از N خرابی | 5 |
-| `OUTPANEL_REQUIRE_LICENSE` | اجبار اعتبارسنجی لایسنس | 0 |
+| قابلیت | توضیح |
+|--------|-------|
+| چند پنل | پشتیبانی x-ui، 3x-ui و Marzban |
+| احراز هویت | نام‌کاربری/رمز یا API Token |
+| همگام‌سازی | سینک خودکار inbound ها |
+| امتیاز سلامت | امتیاز ۰ تا ۱۰۰ با درجه A تا F |
+| تگ‌ها | دسته‌بندی سرورها با تگ سفارشی |
+| عملیات دسته‌ای | پینگ، سینک، فعال/غیرفعال چند سرور |
+
+### 📡 مانیتورینگ و اعلان
+
+| قابلیت | توضیح |
+|--------|-------|
+| TCP Ping | تست اتصال هر اوت‌باند |
+| منابع | CPU، RAM، دیسک، وضعیت Xray |
+| غیرفعال‌سازی خودکار | بعد از N خرابی متوالی |
+| تشخیص تغییر IP | هشدار هنگام تغییر IP سرور |
+| محدودیت ترافیک | هشدار در ۸۰٪ و ۱۰۰٪ |
+| لحظه‌ای | آپدیت SSE بدون رفرش صفحه |
+
+### 🔔 رخدادها و اعلان‌ها
+
+| قابلیت | توضیح |
+|--------|-------|
+| چرخه حیات | باز ← تایید ← حل شده |
+| تلگرام | ربات اعلان + دستورات دوطرفه |
+| Webhook | ارسال event به Zapier، n8n، Make |
+| مرورگر | نوتیفیکیشن push برای alert جدید |
+| زمان‌بندی | گزارش هفتگی خودکار |
+
+### 📊 گزارش‌دهی و خروجی
+
+| قابلیت | توضیح |
+|--------|-------|
+| گزارش Uptime | availability سرور در ۷/۳۰/۹۰ روز |
+| عملکرد | آمار latency هر اوت‌باند |
+| خروجی CSV | سرورها، اوت‌باندها، رخدادها |
+| Badge عمومی | سازگار با shields.io |
+| مستندات API | OpenAPI 3.0 خودکار |
+
+### 🔐 امنیت
+
+| قابلیت | توضیح |
+|--------|-------|
+| رمز عبور | PBKDF2-SHA256 (۲۶۰ هزار تکرار) |
+| رمزنگاری | AES-256-CBC برای credentials |
+| محدودیت نرخ | Login: ۱۰/۱۵دقیقه، API: ۱۲۰/دقیقه |
+| نشست | کوکی HttpOnly، انقضای ۷ روزه |
+| RBAC | ادمین + ۱۰ مدیر با دسترسی بخشی |
+| حسابرسی | لاگ کامل عملیات |
+| لایسنس | توکن امضاشده Ed25519 |
+
+### 🎨 داشبورد
+
+| قابلیت | توضیح |
+|--------|-------|
+| حالت تاریک | تم Dark کامل با تشخیص سیستم |
+| RTL | رابط فارسی + پشتیبانی انگلیسی |
+| PWA | قابل نصب روی موبایل |
+| نمودار | تاریخچه CPU/RAM و پینگ |
+| صفحه‌بندی | جستجو، فیلتر و pagination |
+| برندینگ | لوگو، رنگ و نام سفارشی |
 
 ---
 
-## اتصال سرور x-ui
-
-هر سرور نیاز دارد به:
-- نام سرور
-- IP یا دامنه عمومی
-- آدرس پنل x-ui
-- روش احراز هویت:
-  - **نام کاربری و رمز عبور** — روش سنتی
-  - **API Token** — امن‌تر، بدون ذخیره رمز ادمین
-- آستانه‌های هشدار CPU، RAM و پینگ
-- تایم‌اوت اتصال
-
----
-
-## مدل لایسنس
-
-Veltrix نرم‌افزار تجاری اختصاصی است. استفاده، نصب، تغییر، توزیع، فروش مجدد، واگذاری، میزبانی عمومی یا در دسترس قرار دادن این نرم‌افزار برای اشخاص ثالث بدون لایسنس تجاری معتبر صادرشده توسط iPmartNetwork مجاز نیست.
-
-| پلن | محدودیت | مخاطب |
-|-----|---------|-------|
-| Pro | تا ۲۰ سرور | فروشندگان کوچک و متوسط اوت‌باند |
-| Enterprise | تا ۶۰ سرور و ۶۰ اوت‌باند | تیم‌ها و اپراتورهای پرترافیک |
-
-مدت لایسنس: ۶ ماهه، ۱ ساله، مادام‌العمر.
-
----
-
-## امنیت
-
-- رمزهای عبور با PBKDF2-SHA256 (۲۶۰,۰۰۰ تکرار) ذخیره می‌شوند
-- credentials پنل x-ui با AES-256-CBC + HMAC-SHA256 رمزنگاری می‌شوند
-- نشست‌ها در کوکی HttpOnly با محافظت SameSite
-- محدودیت ورود ناموفق (۵ تلاش → قفل ۱۵ دقیقه‌ای)
-- محدودیت نرخ API (۱۲۰ درخواست/دقیقه به ازای هر IP)
-- رمزهای x-ui هرگز در پاسخ API برگردانده نمی‌شوند
-- توکن‌های لایسنس امضاشده Ed25519 (غیرقابل جعل بدون کلید خصوصی)
-
----
-
-## ساختار پروژه
+## 🏗 معماری
 
 ```
 Veltrix/
-├── outpanel/              بک‌اند Python (۲۲ ماژول)
-├── web/                   فرانت‌اند داشبورد
-│   ├── index.html         اپلیکیشن تک‌صفحه‌ای
-│   ├── assets/            CSS, JS, تصاویر
-│   ├── manifest.json      مانیفست PWA
-│   └── sw.js              Service Worker
-├── docs/                  مستندات
-├── scripts/               اسکریپت‌های نصب
-├── systemd/               فایل سرویس
-├── Dockerfile             ساخت کانتینر
-├── docker-compose.yml     کامپوز production
-└── CHANGELOG.md           تاریخچه انتشار
+├── outpanel/              ۲۶ ماژول Python (بک‌اند)
+│   ├── app.py             سرور HTTP + router
+│   ├── routes.py          ۷۷ endpoint API
+│   ├── worker.py          مانیتورینگ پس‌زمینه
+│   ├── sse.py             آپدیت لحظه‌ای SSE
+│   ├── panels.py          آداپتور چند پنل
+│   ├── telegram_bot.py    ربات تلگرام دوطرفه
+│   ├── crypto.py          رمزنگاری AES-256
+│   ├── reports.py         گزارش‌دهی + CSV
+│   └── ...                Auth, licensing, alerts, i18n
+├── web/                   فرانت‌اند (Vanilla JS SPA)
+├── tests/                 تست‌های واحد (pytest)
+├── .github/workflows/     CI/CD
+├── scripts/               اسکریپت نصب خودکار
+├── docker-compose.yml     استقرار production
+└── docs/                  مستندات
 ```
 
 ---
 
-## توسعه
+## ⚙️ فناوری
+
+| لایه | فناوری |
+|------|--------|
+| بک‌اند | Python 3.12+ (فقط stdlib — بدون وابستگی) |
+| دیتابیس | SQLite با WAL mode |
+| فرانت‌اند | Vanilla JavaScript SPA |
+| استایل | CSS سفارشی با Dark Mode |
+| کانتینر | Docker + Docker Compose |
+| استقرار | سرویس systemd روی Linux |
+| CI/CD | GitHub Actions |
+| تست | pytest |
+
+---
+
+## 🚀 استقرار
+
+### نصب یک‌خطی (Linux)
 
 ```bash
-# بررسی کامپایل
-python -m compileall -q outpanel
+bash <(curl -fsSL https://raw.githubusercontent.com/iPmartNetwork/Veltrix/master/scripts/install-linux.sh)
+```
 
-# اجرای محلی
+اسکریپت نصب شامل:
+- 🔍 تشخیص خودکار OS (Ubuntu, Debian, CentOS, Fedora, Arch)
+- 🐍 نصب خودکار Python 3.12 در صورت عدم وجود
+- 🔑 تولید خودکار کلید رمزنگاری و توکن API
+- 🛡 سرویس systemd با تنظیمات امنیتی
+- 📋 منوی تعاملی (نصب، آپدیت، دمو، حذف)
+
+### Docker
+
+```bash
+docker compose up -d
+```
+
+### توسعه محلی
+
+```bash
 python -m outpanel.app --host 127.0.0.1 --port 8000
-
-# با داده دمو
-OUTPANEL_DEMO_MODE=1 python -m outpanel.app
 ```
 
 ---
 
-## پشتیبانی
+## 🤖 ربات تلگرام
 
-برای خرید لایسنس، پشتیبانی نصب یا استعلام تجاری با تیم iPmartNetwork تماس بگیرید.
+تنظیم در `.env`:
+```env
+OUTPANEL_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
+OUTPANEL_TELEGRAM_ALLOWED_CHATS=-1001234567890
+```
+
+دستورات:
+| دستور | توضیح |
+|--------|-------|
+| `/status` | نمای کلی سرورها |
+| `/servers` | لیست سرورها با وضعیت |
+| `/server <id>` | جزئیات + متریک سرور |
+| `/ping <id>` | تست پینگ اوت‌باندها |
+| `/alerts` | اعلان‌های فعال |
+| `/incidents` | رخدادهای باز |
+| `/health` | امتیاز سلامت |
+
+---
+
+## 📜 لایسنس
+
+Veltrix **نرم‌افزار تجاری اختصاصی** است.
+
+استفاده، نصب، تغییر، توزیع، فروش مجدد، واگذاری، میزبانی عمومی یا در دسترس قرار دادن بدون لایسنس معتبر صادرشده توسط **iPmartNetwork** مجاز نیست.
+
+| پلن | محدودیت | مدت |
+|-----|---------|-----|
+| Pro | ۲۰ سرور | ۶ ماهه / ۱ ساله / مادام‌العمر |
+| Enterprise | ۶۰ سرور + ۶۰ اوت‌باند | ۶ ماهه / ۱ ساله / مادام‌العمر |
+
+---
+
+## 🤝 پشتیبانی
+
+برای خرید لایسنس، پشتیبانی نصب یا استعلام تجاری:
+
+- **GitHub:** [iPmartNetwork](https://github.com/iPmartNetwork)
+- **Issues:** [گزارش باگ](https://github.com/iPmartNetwork/Veltrix/issues)
 
 ---
 
 <p align="center">
-  <sub>ساخته شده با دقت توسط iPmartNetwork</sub>
+  <img src="img/Veltrix.png" alt="Veltrix" width="120" />
+</p>
+
+<p align="center">
+  <sub>ساخته شده با دقت توسط <strong>iPmartNetwork</strong></sub><br>
+  <sub>© 2026 iPmartNetwork — تمامی حقوق محفوظ است.</sub>
 </p>
