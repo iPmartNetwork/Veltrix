@@ -69,7 +69,7 @@ class OutPanelHandler(BaseHTTPRequestHandler):
 
         try:
             # Rate limiting
-            allowed, rate_info = check_rate_limit(client_ip)
+            allowed, rate_info = check_rate_limit(client_ip, path)
             if not allowed:
                 self.json_response(
                     {"error": "Too many requests. Please slow down."},

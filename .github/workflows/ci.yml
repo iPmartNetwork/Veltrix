@@ -1,0 +1,73 @@
+name: Veltrix CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Compile check
+        run: python -m compileall -q outpanel
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Verify routes build
+        run: python -c "from outpanel.routes import build_router; r = build_router(); print(f'{len(r.routes)} routes OK')"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check syntax
+        run: python -m compileall -q outpanel
+
+      - name: Check JavaScript
+        run: |
+          if command -v node &>/dev/null; then
+            node --check web/assets/app.js
+            node --check web/assets/enhancements.js
+          fi
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t veltrix:test .
+
+      - name: Test Docker health
+        run: |
+          docker run -d --name veltrix-test -p 8000:8000 \
+            -e OUTPANEL_REQUIRE_LICENSE=0 \
+            veltrix:test
+          sleep 5
+          curl -f http://localhost:8000/api/health || exit 1
+          docker stop veltrix-test

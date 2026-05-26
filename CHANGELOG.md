@@ -5,6 +5,78 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.3.0] — 2026-05-27
+
+### 🔌 Multi-Panel Support
+
+- **x-ui, 3x-ui, Marzban** — Three panel types supported via unified adapter (`panels.py`). Panel type selectable per-server in the dashboard.
+- **Marzban OAuth2** — Full authentication flow with token-based API access.
+- **Panel auto-detection** — Factory pattern creates the correct client based on `panel_type` field.
+
+### 🤖 Telegram Bot (Two-Way)
+
+- **Interactive commands** — `/status`, `/servers`, `/server <id>`, `/ping <id>`, `/alerts`, `/incidents`, `/health`, `/help`
+- **Long-polling** — Background thread polls Telegram for updates.
+- **Access control** — Restrict bot access to specific chat IDs via `OUTPANEL_TELEGRAM_ALLOWED_CHATS`.
+- **Rich formatting** — HTML-formatted responses with status icons.
+
+### 🔐 License Validation
+
+- **Periodic validation** — Worker validates license with remote server every 24 hours (configurable).
+- **Grace period** — 7-day grace if License Server is unreachable.
+- **Expiry warning** — Dashboard shows warning 14 days before expiration.
+- **Days remaining** — Clear display of remaining license days.
+- **Signed token verification** — Validates cached Ed25519 tokens locally.
+
+### ⚡ Advanced Alerts
+
+- **IP Rotation detection** — Alert when a server's public IP changes unexpectedly.
+- **Traffic limit alerts** — Warning at 80% and alert at 100% of configured traffic limit per outbound.
+- **Configurable limits** — Per-outbound `traffic_limit` field + global `OUTPANEL_TRAFFIC_LIMIT_GB`.
+
+### 🔧 Bulk Operations
+
+- `POST /api/bulk/ping` — Ping multiple servers at once.
+- `POST /api/bulk/sync` — Sync multiple servers.
+- `POST /api/bulk/toggle-servers` — Enable/disable multiple servers.
+- `POST /api/bulk/toggle-outbounds` — Enable/disable multiple outbounds.
+- `POST /api/bulk/delete-servers` — Delete multiple servers.
+
+### 🏷 Server Tags & Groups
+
+- **Tag management** — Assign up to 10 tags per server for categorization.
+- **Filter by tag** — `GET /api/tags/{tag}/servers` returns servers with a specific tag.
+- **Tag list** — `GET /api/tags` returns all unique tags.
+
+### 📛 Public Uptime Badge
+
+- **Shields.io compatible** — `GET /api/badge/uptime` returns JSON in shields.io endpoint format.
+- **Per-server badges** — `GET /api/badge/uptime/{server_id}` for individual server badges.
+- **Color-coded** — Green (99%+), yellow-green (95%+), yellow (90%+), red (<80%).
+
+### 📖 API Documentation
+
+- **Auto-generated OpenAPI 3.0** — `GET /api/docs` returns full Swagger-compatible documentation.
+- **65+ documented paths** — All endpoints with methods, parameters, permissions, and tags.
+- **Security schemes** — Bearer token and cookie auth documented.
+
+### 🧪 Testing & CI
+
+- **Unit test suite** — 7 test modules covering auth, crypto, rate limiting, router, ping, i18n, and panels.
+- **GitHub Actions CI** — Automated testing on Python 3.12/3.13, Docker build verification, syntax checks.
+- **pytest configuration** — `pytest.ini` with verbose output.
+
+### 🛡 Security Improvements
+
+- **Per-endpoint rate limiting** — Login/setup endpoints: 10 req/15min. General API: 120 req/min.
+- **Log rotation** — `RotatingFileHandler` with configurable max size (50MB) and backup count (5).
+
+### 📊 Database
+
+- **New migration** — `panel_type`, `last_detected_ip` on servers; `traffic_limit` on outbounds.
+
+---
+
 ## [0.2.0] — 2026-05-19
 
 ### 🏗 Architecture

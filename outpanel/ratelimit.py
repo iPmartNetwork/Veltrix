@@ -111,6 +111,7 @@ class RateLimiter:
 
 # Global rate limiter instance
 _default_limiter: RateLimiter | None = None
+_login_limiter: RateLimiter | None = None
 
 
 def get_rate_limiter() -> RateLimiter:
@@ -121,12 +122,31 @@ def get_rate_limiter() -> RateLimiter:
     return _default_limiter
 
 
-def check_rate_limit(client_ip: str) -> tuple[bool, dict[str, Any]]:
+def get_login_limiter() -> RateLimiter:
+    """Get or create the login-specific rate limiter (stricter)."""
+    global _login_limiter
+    if _login_limiter is None:
+        _login_limiter = RateLimiter(RateLimitConfig(
+            requests_per_window=10,
+            window_seconds=900,  # 15 minutes
+            burst_limit=5,
+            burst_window=60,
+        ))
+    return _login_limiter
+
+
+def check_rate_limit(client_ip: str, endpoint: str = "") -> tuple[bool, dict[str, Any]]:
     """Check rate limit for a client IP.
 
+    Uses stricter limits for sensitive endpoints (login, setup).
     Returns (allowed, info) where info contains remaining/limit/reset_seconds.
     """
-    limiter = get_rate_limiter()
+    # Stricter limit for auth endpoints
+    if endpoint in ("/api/auth/login", "/api/auth/setup"):
+        limiter = get_login_limiter()
+    else:
+        limiter = get_rate_limiter()
+
     allowed = limiter.is_allowed(client_ip)
     info = limiter.get_remaining(client_ip)
     return allowed, info

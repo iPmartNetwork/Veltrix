@@ -47,12 +47,23 @@ def setup_logger(name: str = "veltrix") -> logging.Logger:
         )
     logger.addHandler(console_handler)
 
-    # File handler (optional)
+    # File handler (optional, with rotation)
     if LOG_FILE:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         file_path = LOG_DIR / LOG_FILE if not os.path.isabs(LOG_FILE) else Path(LOG_FILE)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(str(file_path), encoding="utf-8")
+
+        # Use RotatingFileHandler to prevent disk fill
+        from logging.handlers import RotatingFileHandler
+        max_bytes = int(os.getenv("OUTPANEL_LOG_MAX_MB", "50")) * 1024 * 1024
+        backup_count = int(os.getenv("OUTPANEL_LOG_BACKUP_COUNT", "5"))
+
+        file_handler = RotatingFileHandler(
+            str(file_path),
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+            encoding="utf-8",
+        )
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(JsonFormatter())
         logger.addHandler(file_handler)
