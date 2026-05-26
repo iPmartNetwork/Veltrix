@@ -591,6 +591,7 @@ get_source_dir() {
     # Determine where to get Veltrix source files from.
     # If running from a cloned repo, use local files.
     # If running via curl (stdin), clone the repo first.
+    # NOTE: Only echo the final path to stdout. All logs go to stderr.
 
     local script_dir
     script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd)" || script_dir=""
@@ -602,12 +603,12 @@ get_source_dir() {
     fi
 
     # Running from stdin (curl pipe) — need to clone
-    log_info "Downloading Veltrix from GitHub..."
+    echo -e "    ${GREEN}*${NC} Downloading Veltrix from GitHub..." >&2
     local tmp_dir="/tmp/veltrix-install-$$"
     rm -rf "$tmp_dir"
 
     if command -v git &>/dev/null; then
-        git clone --depth 1 "$REPO_URL" "$tmp_dir" 2>/dev/null
+        git clone --depth 1 "$REPO_URL" "$tmp_dir" >/dev/null 2>&1
     else
         # Fallback: download tarball
         local tarball="/tmp/veltrix-$$.tar.gz"
@@ -626,12 +627,12 @@ get_source_dir() {
     fi
 
     if [[ ! -d "${tmp_dir}/outpanel" ]]; then
-        log_error "Failed to download Veltrix source files."
-        log_info "Try: git clone ${REPO_URL} && cd Veltrix && sudo bash scripts/install-linux.sh"
+        echo -e "    ${RED}x${NC} Failed to download Veltrix source files." >&2
+        echo -e "    ${GREEN}*${NC} Try: git clone ${REPO_URL} && cd Veltrix && sudo bash scripts/install-linux.sh" >&2
         exit 1
     fi
 
-    log_success "Source downloaded to ${tmp_dir}"
+    echo -e "    ${GREEN}+${NC} Source downloaded successfully" >&2
     echo "$tmp_dir"
 }
 
