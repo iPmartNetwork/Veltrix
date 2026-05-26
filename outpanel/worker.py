@@ -33,7 +33,15 @@ SCHEDULED_REPORT_DAY = int(os.getenv("OUTPANEL_REPORT_DAY", "0"))  # 0=Monday
 def enhanced_monitor_loop(stop_event: threading.Event, interval: int) -> None:
     """Enhanced background monitoring loop with SSE events and auto-disable."""
     last_report_check = time.monotonic()
+    last_traffic_check = time.monotonic()
     report_check_interval = 3600  # Check every hour
+    traffic_check_interval = 300  # Check every 5 minutes
+
+    # Start Telegram bot in separate thread
+    _start_telegram_bot(stop_event)
+
+    # Start license validation in separate thread
+    _start_license_validator(stop_event)
 
     while not stop_event.is_set():
         start = time.perf_counter()
@@ -56,6 +64,15 @@ def enhanced_monitor_loop(stop_event: threading.Event, interval: int) -> None:
         except Exception:
             pass
 
+        # Check traffic limits
+        if time.monotonic() - last_traffic_check > traffic_check_interval:
+            last_traffic_check = time.monotonic()
+            try:
+                from .alerts_advanced import check_traffic_limits
+                check_traffic_limits()
+            except Exception:
+                pass
+
         # Check for scheduled reports
         if time.monotonic() - last_report_check > report_check_interval:
             last_report_check = time.monotonic()
@@ -65,6 +82,37 @@ def enhanced_monitor_loop(stop_event: threading.Event, interval: int) -> None:
                 pass
 
         stop_event.wait(interval)
+
+
+def _start_telegram_bot(stop_event: threading.Event) -> None:
+    """Start the Telegram bot polling in a background thread."""
+    try:
+        from .telegram_bot import is_bot_enabled, bot_polling_loop
+        if is_bot_enabled():
+            thread = threading.Thread(
+                target=bot_polling_loop,
+                args=(stop_event,),
+                daemon=True,
+                name="veltrix-telegram-bot",
+            )
+            thread.start()
+    except Exception:
+        pass
+
+
+def _start_license_validator(stop_event: threading.Event) -> None:
+    """Start the license validation loop in a background thread."""
+    try:
+        from .license_validator import license_check_loop
+        thread = threading.Thread(
+            target=license_check_loop,
+            args=(stop_event,),
+            daemon=True,
+            name="veltrix-license-check",
+        )
+        thread.start()
+    except Exception:
+        pass
 
 
 def enhanced_monitor_once() -> int:

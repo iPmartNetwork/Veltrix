@@ -162,6 +162,29 @@ def build_router() -> Router:
     # --- Demo ---
     router.post("/api/demo/seed", handle_demo_seed, permission="maintenance")
 
+    # --- Bulk Operations ---
+    router.post("/api/bulk/ping", handle_bulk_ping, permission="servers")
+    router.post("/api/bulk/sync", handle_bulk_sync, permission="servers")
+    router.post("/api/bulk/toggle-servers", handle_bulk_toggle_servers, permission="servers")
+    router.post("/api/bulk/toggle-outbounds", handle_bulk_toggle_outbounds, permission="outbounds")
+    router.post("/api/bulk/delete-servers", handle_bulk_delete_servers, permission="servers")
+
+    # --- Server Tags ---
+    router.get("/api/tags", handle_tags_list)
+    router.get("/api/tags/{tag}/servers", handle_tag_servers, permission="servers")
+    router.put("/api/servers/{server_id}/tags", handle_server_tags_update, permission="servers")
+
+    # --- Uptime Badge (public) ---
+    router.get("/api/badge/uptime", handle_uptime_badge, auth_required=False)
+    router.get("/api/badge/uptime/{server_id}", handle_uptime_badge_server, auth_required=False)
+
+    # --- API Documentation ---
+    router.get("/api/docs", handle_api_docs, auth_required=False)
+
+    # --- License Validation ---
+    router.get("/api/license/validate", handle_license_validate, permission="license")
+    router.get("/api/license/display", handle_license_display, permission="license")
+
     return router
 
 
@@ -944,3 +967,125 @@ def handle_demo_seed(ctx: RequestContext) -> dict[str, Any]:
     result = seed_demo_data()
     _audit(ctx, "demo.seed", None, None, result)
     return {"ok": True, **result}
+
+
+# ---------------------------------------------------------------------------
+# Bulk Operations handlers
+# ---------------------------------------------------------------------------
+
+def handle_bulk_ping(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import bulk_ping_servers
+    server_ids = ctx.body.get("server_ids", [])
+    if not server_ids or not isinstance(server_ids, list):
+        raise ValueError("server_ids array is required.")
+    results = bulk_ping_servers([int(sid) for sid in server_ids[:20]])
+    return {"ok": True, "results": results}
+
+
+def handle_bulk_sync(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import bulk_sync_servers
+    server_ids = ctx.body.get("server_ids", [])
+    if not server_ids or not isinstance(server_ids, list):
+        raise ValueError("server_ids array is required.")
+    results = bulk_sync_servers([int(sid) for sid in server_ids[:20]])
+    return {"ok": True, "results": results}
+
+
+def handle_bulk_toggle_servers(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import bulk_toggle_servers
+    server_ids = ctx.body.get("server_ids", [])
+    enabled = bool(ctx.body.get("enabled", True))
+    if not server_ids:
+        raise ValueError("server_ids array is required.")
+    count = bulk_toggle_servers([int(sid) for sid in server_ids], enabled)
+    _audit(ctx, "bulk.toggle_servers", "server", None, {"count": count, "enabled": enabled})
+    return {"ok": True, "affected": count}
+
+
+def handle_bulk_toggle_outbounds(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import bulk_toggle_outbounds
+    outbound_ids = ctx.body.get("outbound_ids", [])
+    enabled = bool(ctx.body.get("enabled", True))
+    if not outbound_ids:
+        raise ValueError("outbound_ids array is required.")
+    count = bulk_toggle_outbounds([int(oid) for oid in outbound_ids], enabled)
+    return {"ok": True, "affected": count}
+
+
+def handle_bulk_delete_servers(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import bulk_delete_servers
+    server_ids = ctx.body.get("server_ids", [])
+    if not server_ids:
+        raise ValueError("server_ids array is required.")
+    count = bulk_delete_servers([int(sid) for sid in server_ids])
+    _audit(ctx, "bulk.delete_servers", "server", None, {"count": count})
+    return {"ok": True, "deleted": count}
+
+
+# ---------------------------------------------------------------------------
+# Server Tags handlers
+# ---------------------------------------------------------------------------
+
+def handle_tags_list(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import get_server_tags
+    return {"tags": get_server_tags()}
+
+
+def handle_tag_servers(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import get_servers_by_tag
+    tag = ctx.get_param("tag")
+    return {"tag": tag, "servers": get_servers_by_tag(tag)}
+
+
+def handle_server_tags_update(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import set_server_tags
+    server_id = int(ctx.get_param("server_id"))
+    tags = ctx.body.get("tags", [])
+    if not isinstance(tags, list):
+        raise ValueError("tags must be an array of strings.")
+    result = set_server_tags(server_id, tags)
+    return {"ok": True, "tags": result}
+
+
+# ---------------------------------------------------------------------------
+# Uptime Badge handlers
+# ---------------------------------------------------------------------------
+
+def handle_uptime_badge(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import generate_uptime_badge
+    days = ctx.get_query_int("days", 7)
+    return generate_uptime_badge(server_id=None, days=max(1, min(days, 90)))
+
+
+def handle_uptime_badge_server(ctx: RequestContext) -> dict[str, Any]:
+    from .alerts_advanced import generate_uptime_badge
+    server_id = int(ctx.get_param("server_id"))
+    days = ctx.get_query_int("days", 7)
+    return generate_uptime_badge(server_id=server_id, days=max(1, min(days, 90)))
+
+
+# ---------------------------------------------------------------------------
+# API Documentation handler
+# ---------------------------------------------------------------------------
+
+def handle_api_docs(ctx: RequestContext) -> dict[str, Any]:
+    from .api_docs import generate_api_docs
+    from .routes import build_router
+    router = build_router()
+    return generate_api_docs(router.routes)
+
+
+# ---------------------------------------------------------------------------
+# License Validation handlers
+# ---------------------------------------------------------------------------
+
+def handle_license_validate(ctx: RequestContext) -> dict[str, Any]:
+    from .license_validator import periodic_license_check, validate_cached_token
+    token_result = validate_cached_token()
+    check_result = periodic_license_check()
+    return {"token_validation": token_result, "server_check": check_result}
+
+
+def handle_license_display(ctx: RequestContext) -> dict[str, Any]:
+    from .license_validator import get_license_display_info
+    return {"license": get_license_display_info()}

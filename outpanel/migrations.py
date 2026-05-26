@@ -184,3 +184,20 @@ def m_006_settings_table(conn: Any) -> None:
             updated_at TEXT NOT NULL
         )
     """)
+
+
+@migration("0.2.0-007", "Add panel_type and traffic_limit columns")
+def m_007_panel_type(conn: Any) -> None:
+    """Add panel_type to servers and traffic_limit to outbounds."""
+    try:
+        conn.execute("ALTER TABLE servers ADD COLUMN panel_type TEXT NOT NULL DEFAULT 'x-ui'")
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE servers ADD COLUMN last_detected_ip TEXT")
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE outbounds ADD COLUMN traffic_limit INTEGER DEFAULT 0")
+    except Exception:
+        pass
