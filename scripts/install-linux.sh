@@ -588,29 +588,22 @@ show_menu() {
 }
 
 get_source_dir() {
-    # Determine where to get Veltrix source files from.
-    # If running from a cloned repo, use local files.
-    # If running via curl (stdin), clone the repo first.
-    # NOTE: Only echo the final path to stdout. All logs go to stderr.
-
+    # Returns ONLY the path to stdout. Nothing else.
     local script_dir
     script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd)" || script_dir=""
 
-    # Check if we're in a valid repo with outpanel/ directory
     if [[ -n "$script_dir" && -d "${script_dir}/../outpanel" ]]; then
-        echo "${script_dir}/.."
+        printf '%s' "${script_dir}/.."
         return
     fi
 
-    # Running from stdin (curl pipe) — need to clone
-    echo -e "    ${GREEN}*${NC} Downloading Veltrix from GitHub..." >&2
+    # Running from stdin (curl pipe) — clone repo
     local tmp_dir="/tmp/veltrix-install-$$"
     rm -rf "$tmp_dir"
 
     if command -v git &>/dev/null; then
         git clone --depth 1 "$REPO_URL" "$tmp_dir" >/dev/null 2>&1
     else
-        # Fallback: download tarball
         local tarball="/tmp/veltrix-$$.tar.gz"
         if command -v curl &>/dev/null; then
             curl -fsSL -o "$tarball" "https://github.com/iPmartNetwork/Veltrix/archive/refs/heads/master.tar.gz" 2>/dev/null || \
@@ -627,26 +620,29 @@ get_source_dir() {
     fi
 
     if [[ ! -d "${tmp_dir}/outpanel" ]]; then
-        echo -e "    ${RED}x${NC} Failed to download Veltrix source files." >&2
-        echo -e "    ${GREEN}*${NC} Try: git clone ${REPO_URL} && cd Veltrix && sudo bash scripts/install-linux.sh" >&2
         exit 1
     fi
 
-    echo -e "    ${GREEN}+${NC} Source downloaded successfully" >&2
-    echo "$tmp_dir"
+    printf '%s' "$tmp_dir"
 }
 
 do_install() {
     run_prerequisites
+    log_step "Downloading source"
     local source_dir
     source_dir=$(get_source_dir)
+    if [[ -z "$source_dir" || ! -d "${source_dir}/outpanel" ]]; then
+        log_error "Failed to get Veltrix source files."
+        log_info "Try: git clone ${REPO_URL} && cd Veltrix && sudo bash scripts/install-linux.sh"
+        exit 1
+    fi
+    log_success "Source ready: ${source_dir}"
     create_user
     create_directories
     copy_files "$source_dir"
     create_env_file
     install_service
     start_service
-    # Cleanup temp dir if used
     [[ "$source_dir" == /tmp/veltrix-install-* ]] && rm -rf "$source_dir"
     show_completion
 }
@@ -677,8 +673,14 @@ from outpanel import __version__; print(__version__)
     log_info "New version: ${VELTRIX_VERSION}"
 
     systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+    log_step "Downloading source"
     local source_dir
     source_dir=$(get_source_dir)
+    if [[ -z "$source_dir" || ! -d "${source_dir}/outpanel" ]]; then
+        log_error "Failed to get Veltrix source files."
+        exit 1
+    fi
+    log_success "Source ready"
     copy_files "$source_dir"
     [[ "$source_dir" == /tmp/veltrix-install-* ]] && rm -rf "$source_dir"
     systemctl daemon-reload
