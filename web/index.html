@@ -336,6 +336,32 @@
             </div>
             <button id="createBackupBtn" class="primary" type="button">ساخت بکاپ</button>
           </div>
+
+          <!-- Backup Schedule Settings -->
+          <div class="backup-schedule" style="padding:16px 20px;border-bottom:1px solid var(--line);background:var(--surface-2);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <strong>بکاپ خودکار</strong>
+              <label class="check-line" style="min-height:auto;gap:8px;">
+                <input id="backupAutoEnabled" type="checkbox" checked />
+                فعال
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+              <label>
+                ساعت بکاپ (UTC)
+                <input id="backupHour" type="number" min="0" max="23" value="3" style="min-height:36px;" />
+              </label>
+              <label>
+                نگهداری (تعداد)
+                <input id="backupRetention" type="number" min="1" max="30" value="7" style="min-height:36px;" />
+              </label>
+              <label>
+                <span class="subtle">هر شب ساعت مشخص‌شده بکاپ گرفته می‌شود</span>
+              </label>
+              <button class="secondary" type="button" onclick="window.__veltrixBackup.saveSchedule()" style="min-height:36px;">ذخیره</button>
+            </div>
+          </div>
+
           <div class="backup-note">
             <strong>ریستور دیتابیس فعلی را با نسخه انتخابی جایگزین می‌کند.</strong>
             قبل از هر ریستور، Veltrix به صورت خودکار یک بکاپ ایمنی از وضعیت فعلی می‌سازد.
@@ -370,6 +396,30 @@
               </label>
               <button class="primary" type="submit">تغییر رمز</button>
             </form>
+          </div>
+
+          <!-- 2FA Section -->
+          <div class="twofa-section" style="padding:20px;border-top:1px solid var(--line);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div>
+                <p class="eyebrow">Two-Factor Authentication</p>
+                <h3 style="margin:0;">احراز هویت دو مرحله‌ای (2FA)</h3>
+              </div>
+              <span id="twofaStatus" class="badge unknown">بررسی...</span>
+            </div>
+            <p class="subtle" style="margin:0 0 14px;">با فعال‌سازی 2FA، هنگام ورود علاوه بر رمز عبور، یک کد ۶ رقمی از اپلیکیشن Authenticator نیاز خواهید داشت.</p>
+            <div id="twofaActions">
+              <button id="enable2faBtn" class="primary" type="button" onclick="window.__veltrix2fa.enable()">فعال‌سازی 2FA</button>
+            </div>
+            <div id="twofaSetup" class="hidden" style="margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);">
+              <p><strong>۱.</strong> این کد را در Google Authenticator یا Authy وارد کنید:</p>
+              <code id="twofaSecret" style="display:block;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:4px;font-size:16px;letter-spacing:2px;direction:ltr;text-align:center;margin:10px 0;"></code>
+              <p><strong>۲.</strong> کد ۶ رقمی نمایش‌داده‌شده را وارد کنید:</p>
+              <div style="display:flex;gap:10px;align-items:end;">
+                <input id="twofaCode" type="text" maxlength="6" pattern="[0-9]{6}" placeholder="000000" style="max-width:140px;text-align:center;font-size:18px;letter-spacing:4px;direction:ltr;" />
+                <button class="primary" type="button" onclick="window.__veltrix2fa.confirm()">تایید و فعال‌سازی</button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -572,6 +622,38 @@
             <input name="enabled" type="checkbox" checked />
             فعال
           </label>
+
+          <!-- SSH Auto-Restart Section -->
+          <fieldset class="ssh-fieldset" style="grid-column:1/-1;">
+            <legend>SSH Auto-Restart (ریستارت خودکار)</legend>
+            <div class="form-grid" style="padding:0;">
+              <label class="check-line">
+                <input name="ssh_enabled" type="checkbox" />
+                فعال‌سازی ریستارت خودکار
+              </label>
+              <label>
+                پورت SSH
+                <input name="ssh_port" type="number" min="1" max="65535" value="22" />
+              </label>
+              <label>
+                نام کاربری SSH
+                <input name="ssh_user" value="root" autocomplete="username" />
+              </label>
+              <label>
+                رمز عبور SSH
+                <input name="ssh_password" type="password" autocomplete="off" placeholder="رمز root سرور" />
+              </label>
+              <label>
+                تاخیر ریستارت (دقیقه)
+                <input name="restart_delay" type="number" min="1" max="60" value="5" />
+                <small style="color:var(--muted);">بعد از چند دقیقه قطعی ریستارت شود</small>
+              </label>
+              <label>
+                دستور ریستارت
+                <input name="restart_command" placeholder="systemctl restart xray" value="systemctl restart xray" />
+              </label>
+            </div>
+          </fieldset>
         </div>
 
         <div class="dialog-actions">

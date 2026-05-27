@@ -30,7 +30,7 @@ set -euo pipefail
 # Constants
 # ---------------------------------------------------------------------------
 
-readonly VELTRIX_VERSION="0.3.0"
+readonly VELTRIX_VERSION="0.4.0"
 readonly INSTALL_DIR="/opt/veltrix"
 readonly DATA_DIR="${INSTALL_DIR}/data"
 readonly BACKUP_DIR="${INSTALL_DIR}/backups"

@@ -1867,6 +1867,7 @@ function formDataToServer(formData) {
     name: formData.get("name"),
     host: formData.get("host"),
     panel_url: formData.get("panel_url"),
+    panel_type: formData.get("panel_type") || "x-ui",
     auth_mode: authMode,
     verify_tls: formData.has("verify_tls"),
     enabled: formData.has("enabled"),
@@ -1895,6 +1896,30 @@ function formDataToServer(formData) {
   }
 
   return payload;
+}
+
+// Save SSH config after server save
+async function saveServerSSH(serverId, formData) {
+  if (!formData.has("ssh_enabled") || !formData.get("ssh_enabled")) return;
+  const sshPassword = String(formData.get("ssh_password") || "").trim();
+  if (!sshPassword && !formData.get("id")) return; // No password for new server without SSH
+  try {
+    await api(`/api/servers/${serverId}/ssh`, {
+      method: "POST",
+      body: JSON.stringify({
+        ssh_host: formData.get("host"),
+        ssh_port: Number(formData.get("ssh_port")) || 22,
+        ssh_user: formData.get("ssh_user") || "root",
+        ssh_password: sshPassword,
+        restart_enabled: true,
+        restart_delay_minutes: Number(formData.get("restart_delay")) || 5,
+        restart_command: formData.get("restart_command") || "systemctl restart xray",
+      }),
+    });
+  } catch (e) {
+    // Non-critical — server saved but SSH config failed
+    toast("سرور ذخیره شد ولی تنظیم SSH ناموفق بود: " + e.message);
+  }
 }
 
 async function withBusy(button, task) {

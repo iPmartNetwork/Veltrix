@@ -695,6 +695,9 @@
       enhanceCharts();
       registerServiceWorker();
       connectSSE();
+      // Load 2FA status and backup schedule
+      if (window.__veltrix2fa) window.__veltrix2fa.loadStatus();
+      if (window.__veltrixBackup) window.__veltrixBackup.loadSchedule();
     }, 800);
 
     // Re-inject after navigation
@@ -715,6 +718,102 @@
     downloadExport,
     getFilteredServers,
     getFilteredOutbounds,
+  };
+
+  // 2FA API
+  window.__veltrix2fa = {
+    async enable() {
+      try {
+        const data = await fetch('/api/auth/2fa/enable', { method: 'POST', credentials: 'same-origin' }).then(r => r.json());
+        if (data.secret) {
+          document.getElementById('twofaSecret').textContent = data.secret;
+          document.getElementById('twofaSetup').classList.remove('hidden');
+          document.getElementById('enable2faBtn').classList.add('hidden');
+        }
+      } catch (e) { showToast(e.message || 'خطا'); }
+    },
+    async confirm() {
+      const code = document.getElementById('twofaCode').value.trim();
+      if (code.length !== 6) { showToast('کد باید ۶ رقم باشد.'); return; }
+      try {
+        const res = await fetch('/api/auth/2fa/confirm', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        }).then(r => r.json());
+        if (res.ok) {
+          showToast('2FA فعال شد.');
+          document.getElementById('twofaSetup').classList.add('hidden');
+          document.getElementById('twofaStatus').className = 'badge ok';
+          document.getElementById('twofaStatus').textContent = 'فعال';
+          document.getElementById('enable2faBtn').textContent = 'غیرفعال‌سازی 2FA';
+          document.getElementById('enable2faBtn').classList.remove('hidden');
+          document.getElementById('enable2faBtn').onclick = window.__veltrix2fa.disable;
+        } else { showToast(res.error || 'کد نامعتبر'); }
+      } catch (e) { showToast(e.message || 'خطا'); }
+    },
+    async disable() {
+      const password = prompt('رمز فعلی خود را وارد کنید:');
+      if (!password) return;
+      try {
+        const res = await fetch('/api/auth/2fa/disable', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        }).then(r => r.json());
+        if (res.ok) {
+          showToast('2FA غیرفعال شد.');
+          document.getElementById('twofaStatus').className = 'badge disabled';
+          document.getElementById('twofaStatus').textContent = 'غیرفعال';
+          document.getElementById('enable2faBtn').textContent = 'فعال‌سازی 2FA';
+          document.getElementById('enable2faBtn').onclick = window.__veltrix2fa.enable;
+        } else { showToast(res.error || 'خطا'); }
+      } catch (e) { showToast(e.message || 'خطا'); }
+    },
+    async loadStatus() {
+      try {
+        const data = await fetch('/api/auth/2fa/status', { credentials: 'same-origin' }).then(r => r.json());
+        const el = document.getElementById('twofaStatus');
+        const btn = document.getElementById('enable2faBtn');
+        if (data.enabled) {
+          el.className = 'badge ok'; el.textContent = 'فعال';
+          btn.textContent = 'غیرفعال‌سازی 2FA';
+          btn.onclick = window.__veltrix2fa.disable;
+        } else {
+          el.className = 'badge disabled'; el.textContent = 'غیرفعال';
+          btn.textContent = 'فعال‌سازی 2FA';
+          btn.onclick = window.__veltrix2fa.enable;
+        }
+      } catch (e) {}
+    },
+  };
+
+  // Backup Schedule API
+  window.__veltrixBackup = {
+    async saveSchedule() {
+      const hour = document.getElementById('backupHour').value;
+      const retention = document.getElementById('backupRetention').value;
+      const enabled = document.getElementById('backupAutoEnabled').checked;
+      try {
+        await fetch('/api/backups/schedule', {
+          method: 'PUT', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hour: parseInt(hour), retention: parseInt(retention), enabled }),
+        });
+        showToast('تنظیمات بکاپ ذخیره شد.');
+      } catch (e) { showToast(e.message || 'خطا'); }
+    },
+    async loadSchedule() {
+      try {
+        const data = await fetch('/api/backups/schedule', { credentials: 'same-origin' }).then(r => r.json());
+        const hourEl = document.getElementById('backupHour');
+        const retEl = document.getElementById('backupRetention');
+        const enEl = document.getElementById('backupAutoEnabled');
+        if (hourEl) hourEl.value = data.hour_utc || 3;
+        if (retEl) retEl.value = data.retention || 7;
+        if (enEl) enEl.checked = data.enabled !== false;
+      } catch (e) {}
+    },
   };
 
   // Make state accessible

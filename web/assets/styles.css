@@ -2568,3 +2568,55 @@ select:focus-visible {
 .server-detail-overview {
   grid-template-columns: minmax(260px, 0.8fr) minmax(0, 2fr);
 }
+
+
+/* ---------------------------------------------------------------------------
+   SSH FIELDSET & 2FA SECTION
+--------------------------------------------------------------------------- */
+
+.ssh-fieldset {
+  margin: 0;
+  padding: 16px;
+  border: 1.5px solid rgba(0, 191, 166, 0.15);
+  border-radius: var(--radius);
+  background: var(--green-soft);
+}
+
+.ssh-fieldset legend {
+  padding: 0 10px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--teal-dark);
+}
+
+.ssh-fieldset .form-grid {
+  gap: 12px;
+}
+
+.ssh-fieldset small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+[data-theme="dark"] .ssh-fieldset {
+  background: rgba(25, 241, 210, 0.04);
+  border-color: rgba(25, 241, 210, 0.1);
+}
+
+[data-theme="dark"] .ssh-fieldset legend {
+  color: var(--teal);
+}
+
+.twofa-section h3 {
+  font-size: 16px;
+}
+
+.twofa-section code {
+  font-family: 'Courier New', monospace;
+  user-select: all;
+}
+
+.backup-schedule label {
+  font-size: 12px;
+}

@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.3.0-00bfa6?style=for-the-badge" alt="Version" /></a>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.4.0-00bfa6?style=for-the-badge" alt="Version" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Commercial-ef4444?style=for-the-badge" alt="License" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
 </p>
